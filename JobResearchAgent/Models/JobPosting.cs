@@ -7,6 +7,6 @@ public class JobPosting
     public string Description { get; set; }
     public string Source { get; set; }
     public DateTime CollectedAt { get; set; }
-
     public DateTime CreatedAt { get; set; }
+    public string? ExternalJobId { get; set; }
 }

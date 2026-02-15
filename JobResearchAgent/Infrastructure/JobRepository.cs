@@ -17,8 +17,8 @@ public class JobRepository
         foreach (var job in jobs)
         {
             await conn.ExecuteAsync(
-            @"INSERT INTO jobs(title, company, location, url, description,source, collectedat, createdat)
-              VALUES (@Title, @Company, @Location, @Url, @Description, @Source, @CollectedAt, @createdAt)",
+            @"INSERT INTO jobs(title, company, location, url, description,source, collectedat, createdat, external_job_id)
+              VALUES (@Title, @Company, @Location, @Url, @Description, @Source, @CollectedAt, @createdAt, @ExternalJobId) ON CONFLICT (external_job_id) DO NOTHING;",
               job);
         }
     }

@@ -141,6 +141,7 @@ public class LinkedInSource : IJobSource
                         }
 
                         await detailPage.CloseAsync();
+                        var externalId = ExtractLinkedInJobId(jobUrl);
 
                         jobs.Add(new JobPosting
                         {
@@ -151,7 +152,8 @@ public class LinkedInSource : IJobSource
                             Url = jobUrl,
                             Source = "LinkedIn",
                             CreatedAt = DateTime.UtcNow,
-                            CollectedAt = ParseIsoDate(dateText)
+                            CollectedAt = ParseIsoDate(dateText),
+                            ExternalJobId = externalId
                         });
                     }
                     catch (Exception ex)
@@ -225,6 +227,37 @@ public class LinkedInSource : IJobSource
             return parsed.ToUniversalTime();
 
         return DateTime.UtcNow;
+    }
+
+    private string? ExtractLinkedInJobId(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+            return null;
+
+        try
+        {
+            var uri = new Uri(url);
+
+            // Example path:
+            // /jobs/view/software-engineer-...-4331310763
+            var path = uri.AbsolutePath;
+
+            // Capture trailing numeric ID
+            var match = System.Text.RegularExpressions.Regex.Match(path, @"-(\d+)$");
+            if (match.Success)
+                return match.Groups[1].Value;
+
+            // Fallback to legacy format: /view/123456789
+            match = System.Text.RegularExpressions.Regex.Match(path, @"/view/(\d+)");
+            if (match.Success)
+                return match.Groups[1].Value;
+        }
+        catch
+        {
+            // ignore malformed URLs
+        }
+
+        return null;
     }
 
     async Task<IEnumerable<JobPosting>> IJobSource.SearchAsync(string keyword)
