@@ -1,0 +1,8 @@
+# Ignore build output for the JobResearchAgent project
+JobResearchAgent/bin/
+
+# Common ignores
+bin/
+obj/
+*.user
+*.suo
