@@ -18,7 +18,6 @@ public class LinkedInSource : IJobSource
     {
         // Parameter intentionally ignored.
         // Source builds query from AgentPolicy (agent owns the mission).
-
         var jobs = new List<JobPosting>();
 
         using var playwright = await Playwright.CreateAsync();
