@@ -105,11 +105,6 @@ public class ResearchAgent
         
         _logger.LogInformation($"===== DEBUGGING: Received {jobList.Count()} total jobs before filtering =====");
         
-        //foreach (var job in jobList)
-        //{
-        //    _logger.LogInformation($"Job: {job.Title} | Company: {job.Company} | Location: {job.Location} | Description length: {job.Description?.Length ?? 0}");
-        //}
-        
         // FOR DEBUGGING: Return ALL jobs without filtering
         _logger.LogInformation($"===== RETURNING ALL {jobList.Count()} JOBS WITHOUT FILTERING =====");
         return jobList;

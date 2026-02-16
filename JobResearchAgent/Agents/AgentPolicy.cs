@@ -14,7 +14,6 @@ public class AgentPolicy
     public string[] Keywords { get; init; } =
     {
         "Full Stack Developer", "C# Developer", "Software Engineer", "Solutions Architect", "Software Development Engineer", "Backend Developer", "Frontend Developer", "Cloud Engineer", "DevOps Engineer" 
-        //".NET", "C#", "SQL", "AWS", "Azure", "Angular"
     };
 
     public string[] Levels { get; init; } =
@@ -23,7 +22,6 @@ public class AgentPolicy
     };
 
     public int MaxAgeHours { get; init; } = 24;
-
     public bool RemoteOnly { get; init; } = false;
     public bool AllowHybrid { get; init; } = true;
 }

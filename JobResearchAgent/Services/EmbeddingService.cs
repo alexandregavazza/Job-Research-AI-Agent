@@ -19,10 +19,6 @@ public class EmbeddingService
             modelId: config["AI:EmbeddingModel"] ?? throw new InvalidOperationException("AI:EmbeddingModel configuration is missing"),
             apiKey: apiKey ?? throw new InvalidOperationException("OPENAI_API_KEY environment variable is missing"));
 
-        /*_ = builder.AddOpenAITextEmbeddingGeneration(
-            modelId: config["AI:EmbeddingModel"] ?? throw new InvalidOperationException("AI:EmbeddingModel configuration is missing"),
-            apiKey: config["AI:ApiKey"] ?? throw new InvalidOperationException("AI:ApiKey configuration is missing"));*/
-
         var kernel = builder.Build();
         _embedding = kernel.GetRequiredService<ITextEmbeddingGenerationService>();
     }

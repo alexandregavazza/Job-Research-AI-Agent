@@ -12,6 +12,8 @@ public class Worker : BackgroundService
     private readonly ResumeCustomizer _resumeCustomizer;
     private readonly ResumeProfile _resume;
     private readonly PdfResumeExporter _pdfExporter;
+    private readonly ICoverLetterService _coverLetterService;
+    private readonly PdfCoverLetterExporter _coverLetterExporter;
 
     public Worker(
         ILogger<Worker> logger,
@@ -19,7 +21,9 @@ public class Worker : BackgroundService
         JobRepository repository,
         MatchingAgent matchingAgent,
         ResumeCustomizer resumeCustomizer,
-        PdfResumeExporter pdfExporter)
+        PdfResumeExporter pdfExporter,
+        ICoverLetterService coverLetterService,
+        PdfCoverLetterExporter coverLetterExporter)
     {
         _logger = logger;
         _agent = agent;
@@ -27,6 +31,8 @@ public class Worker : BackgroundService
         _matchingAgent = matchingAgent;
         _resumeCustomizer = resumeCustomizer;
         _pdfExporter = pdfExporter;
+        _coverLetterService = coverLetterService;
+        _coverLetterExporter = coverLetterExporter;
 
         _resume = ResumeLoader.Load();
     }
@@ -44,7 +50,6 @@ public class Worker : BackgroundService
         _logger.LogInformation("Found {Count} jobs", jobs.Count);
 
         // 3️⃣ Save raw jobs first (data lake concept)
-        // await _repository.SaveAsync(jobs);
         var qualifiedJobs = new List<JobPosting>();
 
         // 4️⃣ Evaluate each job semantically
@@ -75,6 +80,11 @@ public class Worker : BackgroundService
 
                 var pdfPath = _pdfExporter.Export(job, tailored);
                 _logger.LogInformation("Generated PDF resume at {PdfPath}", pdfPath);
+
+                var coverLetter = await _coverLetterService.GenerateAsync(job, tailored);
+
+                var pdf = _coverLetterExporter.Export(coverLetter);
+                _logger.LogInformation("Generated PDF cover letter at {PdfPath}", pdf);
             }
         }
 

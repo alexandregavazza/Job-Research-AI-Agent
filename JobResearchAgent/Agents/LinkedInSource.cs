@@ -43,7 +43,7 @@ public class LinkedInSource : IJobSource
 
                 var url = BuildLinkedInUrl(query, country);
 
-                _logger.LogInformation("LinkedIn search → {Url}", url);
+                _logger.LogInformation("LinkedIn search → {country}", country);
 
                 await page.GotoAsync(url, new() { Timeout = 60000 });
 
@@ -73,28 +73,27 @@ public class LinkedInSource : IJobSource
                         var companyEl = await card.QuerySelectorAsync("h4");
                         var locationEl = await card.QuerySelectorAsync(".job-search-card__location");
                         var dateEl = await card.QuerySelectorAsync("time");
-                        //var descriptionEl = await card.QuerySelectorAsync("jobs-description__container");
 
                         var title = titleEl != null ? await titleEl.InnerTextAsync() : "";
                         var company = companyEl != null ? await companyEl.InnerTextAsync() : "";
                         var location = locationEl != null ? await locationEl.InnerTextAsync() : "";
                         var dateText = dateEl != null ? await dateEl.GetAttributeAsync("datetime") : "";
+                        var externalId = ExtractLinkedInJobId(jobUrl);
 
-                        //var descriptionText = descriptionEl != null ? await descriptionEl.InnerTextAsync() : "";
                         // Throttle requests: small delay to reduce LinkedIn rate-limiting
-                        await Task.Delay(500);
+                        await Task.Delay(250);
 
                         // Open job details page (needed for description)
                         var detailPage = await context.NewPageAsync();
-                        _logger.LogInformation("Opening LinkedIn detail page: {Url}", jobUrl);
+                        _logger.LogInformation("Opening LinkedIn detail page: {externalId}", externalId);
 
                         var response = await detailPage.GotoAsync(jobUrl, new() { Timeout = 120000 });
-                        _logger.LogInformation("Detail page response: {Status} {Url}", response?.Status, response?.Url);
+                        _logger.LogInformation("Detail page response: {Status} {externalId}", response?.Status, externalId);
 
                         // Skip pages that didn't return a successful 200 response
                         if (response == null || response.Status != 200)
                         {
-                            _logger.LogWarning("Skipping LinkedIn detail page {Url} — HTTP {Status}", jobUrl, response?.Status);
+                            _logger.LogWarning("Skipping LinkedIn detail page {externalId} — HTTP {Status}", externalId, response?.Status);
                             await detailPage.CloseAsync();
                             continue;
                         }
@@ -141,7 +140,6 @@ public class LinkedInSource : IJobSource
                         }
 
                         await detailPage.CloseAsync();
-                        var externalId = ExtractLinkedInJobId(jobUrl);
 
                         jobs.Add(new JobPosting
                         {
@@ -181,11 +179,6 @@ public class LinkedInSource : IJobSource
         var keywordBlock = string.Join(" OR ",
             _policy.Keywords.Select(k => $"\"{k}\""));
 
-        /*if (_policy.AllowHybrid || _policy.RemoteOnly)
-        {
-            keywordBlock += " OR \"remote\" OR \"hybrid\"";
-        }*/
-
         return $"({keywordBlock})";
     }
 
@@ -199,18 +192,11 @@ public class LinkedInSource : IJobSource
         // LinkedIn uses seconds for freshness filter
         var seconds = _policy.MaxAgeHours * 3600;
 
-        /*var remoteFilter = _policy.RemoteOnly
-            ? "&f_WT=2"   // Remote only
-            : _policy.AllowHybrid
-                ? "&f_WT=2%2C3" // Remote + Hybrid
-                : "";*/
-
         string result = $"https://www.linkedin.com/jobs/search/" +
                $"?keywords={encodedQuery}" +
                $"&location={Uri.EscapeDataString(country)}" +
                $"&f_TPR=r{seconds}" +  // last X hours
                $"&f_E=4"; // Experience level: Mid-Senior
-               //$"{remoteFilter}";
         
         return result;
     }

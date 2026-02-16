@@ -26,10 +26,10 @@ public class PdfResumeExporter
         var todayFolder = Path.Combine(_basePath, DateTime.UtcNow.ToString("yyyy-MM-dd"));
         Directory.CreateDirectory(todayFolder);
 
-        var safeCompany = Sanitize(job.Company);
-        var safeTitle = Sanitize(job.Title);
+        var safeCompany = FileSanitizer.Sanitize(job.Company);
+        var safeTitle = FileSanitizer.Sanitize(job.Title);
 
-        var filePath = Path.Combine(todayFolder, $"{safeCompany}_{safeTitle}.pdf");
+        var filePath = Path.Combine(todayFolder, $"{safeCompany}_{safeTitle}_Resume.pdf");
 
         Document.Create(container =>
         {
@@ -113,13 +113,5 @@ public class PdfResumeExporter
         .GeneratePdf(filePath);
 
         return filePath;
-    }
-
-    private string Sanitize(string input)
-    {
-        foreach (var c in Path.GetInvalidFileNameChars())
-            input = input.Replace(c, '_');
-
-        return input.Replace(" ", "");
     }
 }
