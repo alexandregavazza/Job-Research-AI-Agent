@@ -11,5 +11,7 @@ public class TailoredExperience
 {
     public string Role { get; set; } = "";
     public string Company { get; set; } = "";
+    public string StartDate { get; set; } = "";
+    public string EndDate { get; set; } = "";
     public List<string> Highlights { get; set; } = new();
 }

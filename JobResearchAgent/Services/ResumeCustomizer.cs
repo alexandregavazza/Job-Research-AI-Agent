@@ -63,6 +63,15 @@ Rules:
 - Keep everything truthful.
 - Focus on achievements and impact.
 - Make the candidate sound like a strong fit for THIS role.
+- Select ALL relevant experiences (5–8 typical).
+- Do not artificially limit the list.
+- Keep each concise and achievement-focused.
+- Use bullet points for readability.
+- Add the name of the company for each experience and the period that I worked in the company.
+- Do not summarize, rewrite strategically like a recruiter would.
+- Use human language, not robotic or generic phrasing.
+- Add my name, phone number, LinkedIn profile, my personal website, and email at the top of the resume.
+- Avoid creating more than 5 pages of content.
 
 You are not summarizing.
 You are rewriting strategically like a recruiter would.
@@ -76,6 +85,8 @@ Return ONLY valid JSON in this format:
     {{
       ""Role"": ""..."",
       ""Company"": ""..."",
+      ""StartDate"": ""..."",
+      ""EndDate"": ""..."",
       ""Highlights"": [""..."", ""...""]
     }}
   ]

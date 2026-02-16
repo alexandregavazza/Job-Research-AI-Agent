@@ -19,5 +19,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <PackageReference Include="OpenAI" Version="*" />
+    <PackageReference Include="QuestPDF" Version="2026.2.0" />
   </ItemGroup>
 </Project>

@@ -11,19 +11,22 @@ public class Worker : BackgroundService
     private readonly MatchingAgent _matchingAgent;
     private readonly ResumeCustomizer _resumeCustomizer;
     private readonly ResumeProfile _resume;
+    private readonly PdfResumeExporter _pdfExporter;
 
     public Worker(
         ILogger<Worker> logger,
         ResearchAgent agent,
         JobRepository repository,
         MatchingAgent matchingAgent,
-        ResumeCustomizer resumeCustomizer)
+        ResumeCustomizer resumeCustomizer,
+        PdfResumeExporter pdfExporter)
     {
         _logger = logger;
         _agent = agent;
         _repository = repository;
         _matchingAgent = matchingAgent;
         _resumeCustomizer = resumeCustomizer;
+        _pdfExporter = pdfExporter;
 
         _resume = ResumeLoader.Load();
     }
@@ -69,6 +72,9 @@ public class Worker : BackgroundService
                 job.Description);
 
                 await _repository.SaveTailoredResumeAsync(job, tailored);
+
+                var pdfPath = _pdfExporter.Export(job, tailored);
+                _logger.LogInformation("Generated PDF resume at {PdfPath}", pdfPath);
             }
         }
 
