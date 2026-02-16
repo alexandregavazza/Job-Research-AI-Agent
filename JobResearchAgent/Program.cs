@@ -22,12 +22,11 @@ builder.Services.AddSingleton<JobFitScorer>();
 builder.Services.AddSingleton<IJobSource, LinkedInSource>();
 //builder.Services.AddSingleton<IJobSource, IndeedSource>();
 
-// Register agent
 builder.Services.AddSingleton<ResearchAgent>();
-// Register policy
 builder.Services.AddSingleton<AgentPolicy>();
 builder.Services.AddSingleton<EmbeddingService>();
 builder.Services.AddSingleton<MatchingAgent>();
+builder.Services.AddSingleton<ResumeCustomizer>();
 
 // Register the Worker (the runtime loop)
 builder.Services.AddHostedService<Worker>();

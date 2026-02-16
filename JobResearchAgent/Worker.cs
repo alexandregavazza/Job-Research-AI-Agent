@@ -1,6 +1,5 @@
 using JobResearchAgent.Matching;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using JobResearchAgent.Services;
 
 namespace JobResearchAgent;
 
@@ -10,17 +9,23 @@ public class Worker : BackgroundService
     private readonly ResearchAgent _agent;
     private readonly JobRepository _repository;
     private readonly MatchingAgent _matchingAgent;
+    private readonly ResumeCustomizer _resumeCustomizer;
+    private readonly ResumeProfile _resume;
 
     public Worker(
         ILogger<Worker> logger,
         ResearchAgent agent,
         JobRepository repository,
-        MatchingAgent matchingAgent)
+        MatchingAgent matchingAgent,
+        ResumeCustomizer resumeCustomizer)
     {
         _logger = logger;
         _agent = agent;
         _repository = repository;
         _matchingAgent = matchingAgent;
+        _resumeCustomizer = resumeCustomizer;
+
+        _resume = ResumeLoader.Load();
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -57,6 +62,13 @@ public class Worker : BackgroundService
             {
                 job.MatchScore = result.Score;
                 qualifiedJobs.Add(job);
+
+                var tailored = await _resumeCustomizer.CustomizeAsync(
+                _resume.HumanText,
+                job.Title,
+                job.Description);
+
+                await _repository.SaveTailoredResumeAsync(job, tailored);
             }
         }
 
