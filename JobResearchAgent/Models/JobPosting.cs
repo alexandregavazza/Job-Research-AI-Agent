@@ -9,4 +9,5 @@ public class JobPosting
     public DateTime CollectedAt { get; set; }
     public DateTime CreatedAt { get; set; }
     public string? ExternalJobId { get; set; }
+    public double MatchScore { get; set; }
 }

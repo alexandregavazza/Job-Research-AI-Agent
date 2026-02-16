@@ -36,12 +36,14 @@ public class Worker : BackgroundService
         _logger.LogInformation("Found {Count} jobs", jobs.Count);
 
         // 3️⃣ Save raw jobs first (data lake concept)
-        await _repository.SaveAsync(jobs);
+        // await _repository.SaveAsync(jobs);
+        var qualifiedJobs = new List<JobPosting>();
 
         // 4️⃣ Evaluate each job semantically
         foreach (var job in jobs)
         {
             var result = await _matchingAgent.EvaluateAsync(job);
+            job.MatchScore = result.Score;
 
             _logger.LogInformation(
                 "JobId: {JobId} | Score: {Score:0}% | Decision: {Decision} | {Title}",
@@ -49,9 +51,26 @@ public class Worker : BackgroundService
                 result.Score,
                 result.Decision,
                 job.Title);
+            
+            // ✅ Only keep strong matches
+            if (result.Score >= 70)
+            {
+                job.MatchScore = result.Score;
+                qualifiedJobs.Add(job);
+            }
         }
 
         _logger.LogInformation("Pipeline finished.");
+        _logger.LogInformation(
+            "Qualified {QualifiedCount} jobs out of {Total}",
+            qualifiedJobs.Count,
+            jobs.Count);
+
+        // 4️⃣ Persist ONLY qualified jobs
+        if (qualifiedJobs.Any())
+        {
+            await _repository.SaveAsync(qualifiedJobs);
+        }
 
         // Stop the worker after one run (important!)
         Environment.Exit(0);
