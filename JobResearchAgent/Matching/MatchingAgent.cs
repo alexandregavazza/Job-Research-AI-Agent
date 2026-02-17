@@ -1,21 +1,34 @@
 using JobResearchAgent.Services;
+using Microsoft.Extensions.Options;
 
 namespace JobResearchAgent.Matching;
 
+/// <summary>
+/// Matching agent following SOLID principles with dependency injection
+/// </summary>
 public class MatchingAgent
 {
     private readonly EmbeddingService _embedding;
     private readonly ResumeProfile _resume;
+    private readonly JobFitScorer _scorer;
+    private readonly MatchingConfiguration _config;
 
     private float[]? _resumeVector;
 
-    private readonly JobFitScorer _scorer;
-
-    public MatchingAgent(EmbeddingService embedding, JobFitScorer scorer)
+    public MatchingAgent(
+        EmbeddingService embedding, 
+        JobFitScorer scorer,
+        IResumeLoader resumeLoader,
+        IOptions<MatchingConfiguration> config)
     {
-        _embedding = embedding;
-        _scorer = scorer;
-        _resume = ResumeLoader.Load();
+        _embedding = embedding ?? throw new ArgumentNullException(nameof(embedding));
+        _scorer = scorer ?? throw new ArgumentNullException(nameof(scorer));
+        _config = config?.Value ?? throw new ArgumentNullException(nameof(config));
+        
+        if (resumeLoader == null)
+            throw new ArgumentNullException(nameof(resumeLoader));
+            
+        _resume = resumeLoader.Load();
     }
 
     public async Task InitializeAsync()
@@ -45,7 +58,7 @@ public class MatchingAgent
 
         var similarity = Similarity.Cosine(_resumeVector, jobVector);
 
-        if (similarity < 0.35)
+        if (similarity < _config.MinimumSimilarityThreshold)
         {
             return new JobMatchResult
             {
@@ -55,15 +68,15 @@ public class MatchingAgent
             };
         }
 
-        // Step 2 — deep reasoning (THIS is where JobFitScorer is used)
+        // Step 2 — deep reasoning
         var (score, reason) = await _scorer.ScoreAsync(
             _resume.HumanText,
             job.Title,
             job.Description);
 
         var decision =
-            score >= 75 ? "APPLY" :
-            score >= 60 ? "REVIEW" :
+            score >= _config.ApplyThreshold ? "APPLY" :
+            score >= _config.ReviewThreshold ? "REVIEW" :
             "IGNORE";
 
         return new JobMatchResult

@@ -3,7 +3,12 @@ using Dapper;
 using JobResearchAgent.Models;
 using Npgsql;
 
-public class JobRepository
+namespace JobResearchAgent.Infrastructure;
+
+/// <summary>
+/// Concrete implementation of IJobRepository following SOLID principles
+/// </summary>
+public class JobRepository : IJobRepository
 {
     private readonly string _connection;
 

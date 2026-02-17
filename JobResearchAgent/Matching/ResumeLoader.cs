@@ -4,12 +4,15 @@ using JobResearchAgent.Matching;
 
 namespace JobResearchAgent.Services;
 
-public static class ResumeLoader
+/// <summary>
+/// Concrete implementation of IResumeLoader following SOLID principles
+/// </summary>
+public class ResumeLoader : IResumeLoader
 {
     private const string HumanResumePath = "Profiles/resume.human.txt";
     private const string AiResumePath = "Profiles/resume.ai.txt";
 
-    public static ResumeProfile Load()
+    public ResumeProfile Load()
     {
         if (!File.Exists(HumanResumePath))
             throw new FileNotFoundException(

@@ -1,16 +1,23 @@
 using JobResearchAgent.Services;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
+
+/// <summary>
+/// PDF cover letter exporter following SOLID principles with dependency injection
+/// </summary>
 public class PdfCoverLetterExporter
 {
     private readonly string _basePath;
     private readonly IConfiguration _config;
+    private readonly IFileSanitizer _fileSanitizer;
 
-    public PdfCoverLetterExporter(IConfiguration config)
+    public PdfCoverLetterExporter(IConfiguration config, IFileSanitizer fileSanitizer)
     {
-        _config = config;
+        _config = config ?? throw new ArgumentNullException(nameof(config));
+        _fileSanitizer = fileSanitizer ?? throw new ArgumentNullException(nameof(fileSanitizer));
+        
         _basePath = config["Output:BasePath"]
-            ?? throw new Exception("Output:BasePath not configured.");
+            ?? throw new InvalidOperationException("Output:BasePath not configured.");
     }
 
     public string Export(GeneratedCoverLetter letter)
@@ -18,8 +25,8 @@ public class PdfCoverLetterExporter
         var todayFolder = Path.Combine(_basePath, DateTime.UtcNow.ToString("yyyy-MM-dd"));
         Directory.CreateDirectory(todayFolder);
 
-        var safeCompany = FileSanitizer.Sanitize(letter.Company);
-        var safeTitle = FileSanitizer.Sanitize(letter.Title);
+        var safeCompany = _fileSanitizer.Sanitize(letter.Company);
+        var safeTitle = _fileSanitizer.Sanitize(letter.Title);
 
         var filePath = Path.Combine(todayFolder, $"{safeCompany}_{safeTitle}_CoverLetter.pdf");
 

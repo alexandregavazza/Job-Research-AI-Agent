@@ -6,19 +6,25 @@ using JobResearchAgent.Models;
 
 namespace JobResearchAgent.Services;
 
+/// <summary>
+/// PDF resume exporter following SOLID principles with dependency injection
+/// </summary>
 public class PdfResumeExporter
 {
     private readonly string _basePath;
     private readonly IConfiguration _config;
     private readonly string[] _education;
+    private readonly IFileSanitizer _fileSanitizer;
 
-    public PdfResumeExporter(IConfiguration config)
+    public PdfResumeExporter(IConfiguration config, IFileSanitizer fileSanitizer)
     {
-        _config = config;
+        _config = config ?? throw new ArgumentNullException(nameof(config));
+        _fileSanitizer = fileSanitizer ?? throw new ArgumentNullException(nameof(fileSanitizer));
+        
         _basePath = config["Output:BasePath"]
-            ?? throw new Exception("Output:BasePath not configured.");
+            ?? throw new InvalidOperationException("Output:BasePath not configured.");
         _education = config.GetSection("Candidate:Education").Get<string[]>() 
-            ?? throw new Exception("Candidate:Education not configured.");
+            ?? throw new InvalidOperationException("Candidate:Education not configured.");
     }
 
     public string Export(JobPosting job, TailoredResume resume)
@@ -26,8 +32,8 @@ public class PdfResumeExporter
         var todayFolder = Path.Combine(_basePath, DateTime.UtcNow.ToString("yyyy-MM-dd"));
         Directory.CreateDirectory(todayFolder);
 
-        var safeCompany = FileSanitizer.Sanitize(job.Company);
-        var safeTitle = FileSanitizer.Sanitize(job.Title);
+        var safeCompany = _fileSanitizer.Sanitize(job.Company);
+        var safeTitle = _fileSanitizer.Sanitize(job.Title);
 
         var filePath = Path.Combine(todayFolder, $"{safeCompany}_{safeTitle}_Resume.pdf");
 

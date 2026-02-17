@@ -1,40 +1,52 @@
 using JobResearchAgent.Matching;
 using JobResearchAgent.Services;
+using JobResearchAgent.Infrastructure;
+using Microsoft.Extensions.Options;
 
 namespace JobResearchAgent;
 
+/// <summary>
+/// Background worker following SOLID principles with dependency injection
+/// </summary>
 public class Worker : BackgroundService
 {
     private readonly ILogger<Worker> _logger;
     private readonly ResearchAgent _agent;
-    private readonly JobRepository _repository;
+    private readonly IJobRepository _repository;
     private readonly MatchingAgent _matchingAgent;
     private readonly ResumeCustomizer _resumeCustomizer;
     private readonly ResumeProfile _resume;
     private readonly PdfResumeExporter _pdfExporter;
     private readonly ICoverLetterService _coverLetterService;
     private readonly PdfCoverLetterExporter _coverLetterExporter;
+    private readonly MatchingConfiguration _matchingConfig;
 
     public Worker(
         ILogger<Worker> logger,
         ResearchAgent agent,
-        JobRepository repository,
+        IJobRepository repository,
         MatchingAgent matchingAgent,
         ResumeCustomizer resumeCustomizer,
         PdfResumeExporter pdfExporter,
         ICoverLetterService coverLetterService,
-        PdfCoverLetterExporter coverLetterExporter)
+        PdfCoverLetterExporter coverLetterExporter,
+        IResumeLoader resumeLoader,
+        IOptions<MatchingConfiguration> matchingConfig)
     {
-        _logger = logger;
-        _agent = agent;
-        _repository = repository;
-        _matchingAgent = matchingAgent;
-        _resumeCustomizer = resumeCustomizer;
-        _pdfExporter = pdfExporter;
-        _coverLetterService = coverLetterService;
-        _coverLetterExporter = coverLetterExporter;
-
-        _resume = ResumeLoader.Load();
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _agent = agent ?? throw new ArgumentNullException(nameof(agent));
+        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+        _matchingAgent = matchingAgent ?? throw new ArgumentNullException(nameof(matchingAgent));
+        _resumeCustomizer = resumeCustomizer ?? throw new ArgumentNullException(nameof(resumeCustomizer));
+        _pdfExporter = pdfExporter ?? throw new ArgumentNullException(nameof(pdfExporter));
+        _coverLetterService = coverLetterService ?? throw new ArgumentNullException(nameof(coverLetterService));
+        _coverLetterExporter = coverLetterExporter ?? throw new ArgumentNullException(nameof(coverLetterExporter));
+        _matchingConfig = matchingConfig?.Value ?? throw new ArgumentNullException(nameof(matchingConfig));
+        
+        if (resumeLoader == null)
+            throw new ArgumentNullException(nameof(resumeLoader));
+            
+        _resume = resumeLoader.Load();
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -66,7 +78,7 @@ public class Worker : BackgroundService
                 job.Title);
             
             // ✅ Only keep strong matches
-            if (result.Score >= 70)
+            if (result.Score >= _matchingConfig.QualificationThreshold)
             {
                 job.MatchScore = result.Score;
                 qualifiedJobs.Add(job);

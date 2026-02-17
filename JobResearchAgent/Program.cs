@@ -1,6 +1,7 @@
 using JobResearchAgent;
 using JobResearchAgent.Matching;
 using JobResearchAgent.Services;
+using JobResearchAgent.Infrastructure;
 using OpenAI;
 using QuestPDF.Infrastructure;
 
@@ -13,8 +14,12 @@ var builder = Host.CreateApplicationBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("Default")
     ?? throw new InvalidOperationException("Database connection string 'Default' is not configured.");
 
-// Register infrastructure
-builder.Services.AddSingleton(new JobRepository(connectionString));
+// Register infrastructure with interfaces
+builder.Services.AddSingleton<IJobRepository>(new JobRepository(connectionString));
+
+// Register core services with interfaces
+builder.Services.AddSingleton<IResumeLoader, ResumeLoader>();
+builder.Services.AddSingleton<IFileSanitizer, FileSanitizer>();
 
 var apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY")
     ?? throw new InvalidOperationException("OPENAI_API_KEY environment variable is not set.");
@@ -36,8 +41,12 @@ builder.Services.AddSingleton<ResumeCustomizer>();
 builder.Services.AddSingleton<PdfResumeExporter>();
 builder.Services.AddSingleton<PdfCoverLetterExporter>();
 builder.Services.AddSingleton<ICoverLetterService, CoverLetterService>();
+
+// Configure agent policies and matching thresholds
 builder.Services.Configure<AgentPolicy>(
     builder.Configuration.GetSection("AgentPolicy"));
+builder.Services.Configure<MatchingConfiguration>(
+    builder.Configuration.GetSection("MatchingConfiguration"));
 
 // Register the Worker (the runtime loop)
 builder.Services.AddHostedService<Worker>();
