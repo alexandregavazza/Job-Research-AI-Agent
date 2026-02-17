@@ -28,13 +28,14 @@ builder.Services.AddSingleton<JobFitScorer>();
 builder.Services.AddSingleton<IJobSource, LinkedInSource>();
 //builder.Services.AddSingleton<IJobSource, IndeedSource>();
 builder.Services.AddSingleton<ResearchAgent>();
-builder.Services.AddSingleton<AgentPolicy>();
 builder.Services.AddSingleton<EmbeddingService>();
 builder.Services.AddSingleton<MatchingAgent>();
 builder.Services.AddSingleton<ResumeCustomizer>();
 builder.Services.AddSingleton<PdfResumeExporter>();
 builder.Services.AddSingleton<PdfCoverLetterExporter>();
 builder.Services.AddSingleton<ICoverLetterService, CoverLetterService>();
+builder.Services.Configure<AgentPolicy>(
+    builder.Configuration.GetSection("AgentPolicy"));
 
 // Register the Worker (the runtime loop)
 builder.Services.AddHostedService<Worker>();

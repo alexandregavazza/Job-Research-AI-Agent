@@ -1,5 +1,6 @@
 using Microsoft.Playwright;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace JobResearchAgent;
 
@@ -8,10 +9,10 @@ public class LinkedInSource : IJobSource
     private readonly ILogger<LinkedInSource> _logger;
     private readonly AgentPolicy _policy;
 
-    public LinkedInSource(ILogger<LinkedInSource> logger, AgentPolicy policy)
+    public LinkedInSource(ILogger<LinkedInSource> logger, IOptions<AgentPolicy> policy)
     {
         _logger = logger;
-        _policy = policy;
+        _policy = policy.Value;
     }
 
     public async Task<List<JobPosting>> SearchAsync(string _)
@@ -29,7 +30,7 @@ public class LinkedInSource : IJobSource
         });
 
         var query = BuildQuery();
-
+        
         foreach (var country in _policy.Countries)
         {
             try

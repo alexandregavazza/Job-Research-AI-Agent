@@ -13,6 +13,7 @@ public class CoverLetterService : ICoverLetterService
         var model = config["AI:Model"]!;
         _chat = client.GetChatClient(model);
         _config = config;
+        _logger = logger;
     }
 
     public async Task<GeneratedCoverLetter> GenerateAsync(
