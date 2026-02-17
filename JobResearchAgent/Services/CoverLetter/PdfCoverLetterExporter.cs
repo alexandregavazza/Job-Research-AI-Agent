@@ -1,4 +1,5 @@
 using JobResearchAgent.Services;
+using JobResearchAgent.Services.FileManipulator;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 

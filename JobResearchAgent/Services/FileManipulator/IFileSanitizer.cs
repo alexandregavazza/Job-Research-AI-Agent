@@ -1,4 +1,4 @@
-namespace JobResearchAgent.Services;
+namespace JobResearchAgent.Services.FileManipulator;
 
 /// <summary>
 /// Interface for sanitizing file names, following Dependency Inversion Principle

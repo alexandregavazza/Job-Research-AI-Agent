@@ -1,4 +1,4 @@
-namespace JobResearchAgent.Services;
+namespace JobResearchAgent.Services.FileManipulator;
 
 /// <summary>
 /// Concrete implementation of IFileSanitizer following SOLID principles

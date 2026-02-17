@@ -4,6 +4,7 @@ using JobResearchAgent.Services;
 using JobResearchAgent.Infrastructure;
 using OpenAI;
 using QuestPDF.Infrastructure;
+using JobResearchAgent.Services.FileManipulator;
 
 // ✅ Set QuestPDF license ONCE at startup
 QuestPDF.Settings.License = LicenseType.Community;

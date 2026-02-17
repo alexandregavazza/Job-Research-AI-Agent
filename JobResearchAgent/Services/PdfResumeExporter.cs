@@ -3,6 +3,7 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using JobResearchAgent.Models;
+using JobResearchAgent.Services.FileManipulator;
 
 namespace JobResearchAgent.Services;
 
