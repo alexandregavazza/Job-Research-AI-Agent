@@ -1,8 +1,7 @@
 using Microsoft.Playwright;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace JobResearchAgent;
+namespace JobResearchAgent.Agents;
 
 public class LinkedInSource : IJobSource
 {

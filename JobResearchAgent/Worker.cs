@@ -1,7 +1,9 @@
 using JobResearchAgent.Matching;
 using JobResearchAgent.Services;
 using JobResearchAgent.Infrastructure;
+using JobResearchAgent.Agents;
 using Microsoft.Extensions.Options;
+using JobResearchAgent.Application;
 
 namespace JobResearchAgent;
 
@@ -16,10 +18,11 @@ public class Worker : BackgroundService
     private readonly MatchingAgent _matchingAgent;
     private readonly ResumeCustomizer _resumeCustomizer;
     private readonly ResumeProfile _resume;
-    private readonly PdfResumeExporter _pdfExporter;
+    private readonly PdfResumeExporter _pdfResumeExporter;
     private readonly ICoverLetterService _coverLetterService;
     private readonly PdfCoverLetterExporter _coverLetterExporter;
     private readonly MatchingConfiguration _matchingConfig;
+    private readonly ApplicationAgent _applicationAgent;
 
     public Worker(
         ILogger<Worker> logger,
@@ -27,22 +30,24 @@ public class Worker : BackgroundService
         IJobRepository repository,
         MatchingAgent matchingAgent,
         ResumeCustomizer resumeCustomizer,
-        PdfResumeExporter pdfExporter,
+        PdfResumeExporter pdfResumeExporter,
         ICoverLetterService coverLetterService,
         PdfCoverLetterExporter coverLetterExporter,
         IResumeLoader resumeLoader,
-        IOptions<MatchingConfiguration> matchingConfig)
+        IOptions<MatchingConfiguration> matchingConfig,
+        ApplicationAgent applicationAgent)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _agent = agent ?? throw new ArgumentNullException(nameof(agent));
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _matchingAgent = matchingAgent ?? throw new ArgumentNullException(nameof(matchingAgent));
         _resumeCustomizer = resumeCustomizer ?? throw new ArgumentNullException(nameof(resumeCustomizer));
-        _pdfExporter = pdfExporter ?? throw new ArgumentNullException(nameof(pdfExporter));
+        _pdfResumeExporter = pdfResumeExporter ?? throw new ArgumentNullException(nameof(pdfResumeExporter));
         _coverLetterService = coverLetterService ?? throw new ArgumentNullException(nameof(coverLetterService));
         _coverLetterExporter = coverLetterExporter ?? throw new ArgumentNullException(nameof(coverLetterExporter));
         _matchingConfig = matchingConfig?.Value ?? throw new ArgumentNullException(nameof(matchingConfig));
-        
+        _applicationAgent = applicationAgent ?? throw new ArgumentNullException(nameof(applicationAgent));
+
         if (resumeLoader == null)
             throw new ArgumentNullException(nameof(resumeLoader));
             
@@ -90,13 +95,20 @@ public class Worker : BackgroundService
 
                 await _repository.SaveTailoredResumeAsync(job, tailored);
 
-                var pdfPath = _pdfExporter.Export(job, tailored);
-                _logger.LogInformation("Generated PDF resume at {PdfPath}", pdfPath);
+                var pdfResumePath = _pdfResumeExporter.Export(job, tailored);
+                _logger.LogInformation("Generated PDF resume at {PdfPath}", pdfResumePath);
 
                 var coverLetter = await _coverLetterService.GenerateAsync(job, tailored);
 
-                var pdf = _coverLetterExporter.Export(coverLetter);
-                _logger.LogInformation("Generated PDF cover letter at {PdfPath}", pdf);
+                var pdfCoverLetterPath = _coverLetterExporter.Export(coverLetter);
+                _logger.LogInformation("Generated PDF cover letter at {PdfPath}", pdfCoverLetterPath);
+            
+                /*await _applicationAgent.ExecuteAsync(
+                    job,
+                    pdfResumePath,
+                    pdfCoverLetterPath,
+                    result.Score,
+                    stoppingToken);*/
             }
         }
 

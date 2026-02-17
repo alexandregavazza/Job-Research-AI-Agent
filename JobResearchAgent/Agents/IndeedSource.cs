@@ -1,7 +1,6 @@
 using Microsoft.Playwright;
-using Microsoft.Extensions.Logging;
 
-namespace JobResearchAgent;
+namespace JobResearchAgent.Agents;
 
 public class IndeedSource : IJobSource
 {

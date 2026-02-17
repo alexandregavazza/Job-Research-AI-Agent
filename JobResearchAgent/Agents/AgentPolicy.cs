@@ -1,4 +1,4 @@
-namespace JobResearchAgent;
+namespace JobResearchAgent.Agents;
 
 public class AgentPolicy
 {

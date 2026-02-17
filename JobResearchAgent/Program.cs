@@ -5,6 +5,10 @@ using JobResearchAgent.Infrastructure;
 using OpenAI;
 using QuestPDF.Infrastructure;
 using JobResearchAgent.Services.FileManipulator;
+using JobResearchAgent.Application;
+using JobResearchAgent.Infrastructure.Automation;
+using JobResearchAgent.Models;
+using JobResearchAgent.Agents;
 
 // ✅ Set QuestPDF license ONCE at startup
 QuestPDF.Settings.License = LicenseType.Community;
@@ -17,6 +21,7 @@ var connectionString = builder.Configuration.GetConnectionString("Default")
 
 // Register infrastructure with interfaces
 builder.Services.AddSingleton<IJobRepository>(new JobRepository(connectionString));
+builder.Services.AddSingleton<IApplicationLogRepository>(new ApplicationLogRepository(connectionString));
 
 // Register core services with interfaces
 builder.Services.AddSingleton<IResumeLoader, ResumeLoader>();
@@ -42,12 +47,24 @@ builder.Services.AddSingleton<ResumeCustomizer>();
 builder.Services.AddSingleton<PdfResumeExporter>();
 builder.Services.AddSingleton<PdfCoverLetterExporter>();
 builder.Services.AddSingleton<ICoverLetterService, CoverLetterService>();
+builder.Services.AddSingleton<ApplicationAgent>();
+builder.Services.AddSingleton<IBrowserAutomation, PlaywrightAutomation>();
+builder.Services.AddSingleton<IApplicationAutomation, IndeedAutomation>();
+builder.Services.AddSingleton<IApplicationAutomation, LinkedInAutomation>();
 
 // Configure agent policies and matching thresholds
 builder.Services.Configure<AgentPolicy>(
     builder.Configuration.GetSection("AgentPolicy"));
 builder.Services.Configure<MatchingConfiguration>(
     builder.Configuration.GetSection("MatchingConfiguration"));
+builder.Services.Configure<ApplicationPolicy>(
+    builder.Configuration.GetSection("ApplicationPolicy"));
+builder.Services.Configure<AutomationOptions>(
+    builder.Configuration.GetSection("Automation"));
+builder.Services.Configure<BrowserAutomationOptions>(
+    builder.Configuration.GetSection("BrowserAutomation"));
+builder.Services.Configure<IndeedAutomationOptions>(
+    builder.Configuration.GetSection("IndeedAutomation"));
 
 // Register the Worker (the runtime loop)
 builder.Services.AddHostedService<Worker>();

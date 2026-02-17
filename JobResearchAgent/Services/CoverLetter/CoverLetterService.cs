@@ -7,6 +7,20 @@ public class CoverLetterService : ICoverLetterService
     private readonly ChatClient _chat;
     private readonly ILogger<CoverLetterService> _logger;
     private readonly IConfiguration _config;
+    private const string SystemPrompt = """
+        You are a senior engineering hiring manager writing concise, credible cover letters.
+
+        Rules:
+        - Do NOT summarize the resume.
+        - Do NOT invent skills or experience.
+        - Do NOT sound enthusiastic or sales-like.
+        - Avoid buzzwords.
+        - Use a formal tone, but not overly stiff.
+        - Use human-like language.
+        - Write like an experienced engineer.
+        - Focus on alignment with the role and business impact.
+        - 220–300 words maximum.
+        """;
 
     public CoverLetterService(OpenAIClient client, IConfiguration config, ILogger<CoverLetterService> logger)
     {
@@ -52,90 +66,131 @@ public class CoverLetterService : ICoverLetterService
         };
     }
 
-    private const string SystemPrompt = """
-        You are a senior engineering hiring manager writing concise, credible cover letters.
+    private string ResolvePhoneByLocation(JobPosting job)
+    {
+        // Try to infer country from job metadata
+        var location = job.Location?.ToLowerInvariant() ?? "";
 
-        Rules:
-        - Do NOT summarize the resume.
-        - Do NOT invent skills or experience.
-        - Do NOT sound enthusiastic or sales-like.
-        - Avoid buzzwords.
-        - Use a formal tone, but not overly stiff.
-        - Use human-like language.
-        - Write like an experienced engineer.
-        - Focus on alignment with the role and business impact.
-        - 220–300 words maximum.
-        """;
+        if (location.Contains("brazil"))
+            return _config["Candidate:PhoneBR"]
+                ?? _config["Candidate:Phone"]
+                ?? "Phone Not Configured";
+
+        if (location.Contains("canada"))
+            return _config["Candidate:PhoneCA"]
+                ?? _config["Candidate:Phone"]
+                ?? "Phone Not Configured";
+
+        if (location.Contains("united states") ||
+            location.Contains("usa") ||
+            location.Contains("us"))
+            return _config["Candidate:PhoneUS"]
+                ?? _config["Candidate:Phone"]
+                ?? "Phone Not Configured";
+
+        // Default for Singapore, UAE, etc.
+        return _config["Candidate:Phone"] ?? "Phone Not Configured";
+    }
+
+    private string ResolveLocationByJob(JobPosting job)
+    {
+        // Try to infer country from job metadata
+        var location = job.Location?.ToLowerInvariant() ?? "";
+
+        if (location.Contains("brazil"))
+            return _config["Candidate:LocationBR"]
+                ?? _config["Candidate:Location"]
+                ?? "Location Not Configured";
+
+        if (location.Contains("canada"))
+            return _config["Candidate:LocationCA"]
+                ?? _config["Candidate:Location"]
+                ?? "Location Not Configured";
+
+        if (location.Contains("united states") ||
+            location.Contains("usa") ||
+            location.Contains("us"))
+            return _config["Candidate:LocationUS"]
+                ?? _config["Candidate:Location"]
+                ?? "Location Not Configured";
+
+        // Default for Singapore, UAE, etc.
+        return _config["Candidate:Location"] ?? "Location Not Configured";
+    }
 
     private string BuildPrompt(JobPosting job, TailoredResume resume)
     {
         var today = DateTime.UtcNow.ToString("MMMM dd, yyyy");
 
+        var phone = ResolvePhoneByLocation(job);
+        var location = ResolveLocationByJob(job);
+
         var skills = string.Join(", ", resume.KeySkills);
 
         var experiences = string.Join("\n\n",
             resume.Experience.Select(e => $"""
-    Company: {e.Company}
-    Role: {e.Role}
-    Period: {e.StartDate} - {e.EndDate}
+                Company: {e.Company}
+                Role: {e.Role}
+                Period: {e.StartDate} - {e.EndDate}
 
-    Key Contributions:
-    {string.Join("\n", e.Highlights.Select(a => "- " + a))}
-    """));
+                Key Contributions:
+                {string.Join("\n", e.Highlights.Select(a => "- " + a))}
+                """));
 
-        return $"""
-    Write a tailored cover letter for this role.
+                    return $"""
+                Write a tailored cover letter for this role.
 
-    The letter MUST follow this EXACT structure:
+                The letter MUST follow this EXACT structure:
 
-    --------------------------------
-    {_config["Candidate:FullName"] ?? "Name Not Configured"}
-    {_config["Candidate:Phone"] ?? "Phone Not Configured"}
-    {_config["Candidate:Email"] ?? "Email Not Configured"}
+                --------------------------------
+                {_config["Candidate:FullName"] ?? "Name Not Configured"}
+                {phone}
+                {_config["Candidate:Email"] ?? "Email Not Configured"}
+                {location}
 
-    {today}
-    --------------------------------
+                {today}
+                --------------------------------
 
-    Then begin the letter (no extra headings).
+                Then begin the letter (no extra headings).
 
-    The letter MUST be grounded in the candidate's real selected experience below.
-    Do NOT generalize. Reference the work naturally (no bullet lists).
+                The letter MUST be grounded in the candidate's real selected experience below.
+                Do NOT generalize. Reference the work naturally (no bullet lists).
 
-    ROLE:
-    {job.Title}
+                ROLE:
+                {job.Title}
 
-    COMPANY:
-    {job.Company}
+                COMPANY:
+                {job.Company}
 
-    JOB DESCRIPTION:
-    {job.Description}
+                JOB DESCRIPTION:
+                {job.Description}
 
-    CANDIDATE PROFESSIONAL SUMMARY:
-    {resume.ProfessionalSummary}
+                CANDIDATE PROFESSIONAL SUMMARY:
+                {resume.ProfessionalSummary}
 
-    CORE SKILLS IDENTIFIED FOR THIS ROLE:
-    {skills}
+                CORE SKILLS IDENTIFIED FOR THIS ROLE:
+                {skills}
 
-    RELEVANT EXPERIENCE SELECTED FOR THIS APPLICATION:
-    {experiences}
+                RELEVANT EXPERIENCE SELECTED FOR THIS APPLICATION:
+                {experiences}
 
-    Instructions:
-    - Connect past systems to this company's needs.
-    - Show engineering ownership and delivery mindset.
-    - Emphasize architecture, modernization, scalability, or cloud when relevant.
-    - Use specific experience context, but do NOT restate bullets.
-    - Avoid buzzwords and enthusiasm language.
-    - Sound like a senior engineer writing directly to a hiring manager.
-    - 220–300 words max.
-    - Use natural business prose (no lists).
+                Instructions:
+                - Connect past systems to this company's needs.
+                - Show engineering ownership and delivery mindset.
+                - Emphasize architecture, modernization, scalability, or cloud when relevant.
+                - Use specific experience context, but do NOT restate bullets.
+                - Avoid buzzwords and enthusiasm language.
+                - Sound like a senior engineer writing directly to a hiring manager.
+                - 220–300 words max.
+                - Use natural business prose (no lists).
 
-    Do NOT invent experience.
-    Do NOT list every technology.
-    Do NOT summarize the resume.
-    Focus on relevance and impact.
-    Always add "Sincerely, {_config["Candidate:FullName"] ?? "Name Not Configured"}" at the end.
+                Do NOT invent experience.
+                Do NOT list every technology.
+                Do NOT summarize the resume.
+                Focus on relevance and impact.
+                Always add "Sincerely, {_config["Candidate:FullName"] ?? "Name Not Configured"}" at the end.
 
-    Return ONLY the finished letter.
-    """;
+                Return ONLY the finished letter.
+                """;
     }
 }
