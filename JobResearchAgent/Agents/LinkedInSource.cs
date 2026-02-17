@@ -78,7 +78,7 @@ public class LinkedInSource : IJobSource
                         var title = titleEl != null ? await titleEl.InnerTextAsync() : "";
                         var company = companyEl != null ? await companyEl.InnerTextAsync() : "";
                         var location = locationEl != null ? await locationEl.InnerTextAsync() : "";
-                        var dateText = dateEl != null ? await dateEl.GetAttributeAsync("datetime") : "";
+                        var dateText = dateEl != null ? await dateEl.GetAttributeAsync("datetime") ?? "" : "";
                         var externalId = ExtractLinkedInJobId(jobUrl);
 
                         // Throttle requests: small delay to reduce LinkedIn rate-limiting

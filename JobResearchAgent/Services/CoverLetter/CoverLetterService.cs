@@ -10,7 +10,8 @@ public class CoverLetterService : ICoverLetterService
 
     public CoverLetterService(OpenAIClient client, IConfiguration config, ILogger<CoverLetterService> logger)
     {
-        var model = config["AI:Model"]!;
+        var model = config["AI:Model"]
+            ?? throw new InvalidOperationException("AI:Model configuration is missing.");
         _chat = client.GetChatClient(model);
         _config = config;
         _logger = logger;
@@ -44,7 +45,7 @@ public class CoverLetterService : ICoverLetterService
 
         return new GeneratedCoverLetter
         {
-            JobId = job.ExternalJobId,
+            JobId = job.ExternalJobId ?? job.Url ?? "unknown",
             Company = job.Company,
             Title = job.Title,
             Content = text
@@ -88,9 +89,9 @@ public class CoverLetterService : ICoverLetterService
     The letter MUST follow this EXACT structure:
 
     --------------------------------
-    {_config["Candidate:FullName"]}
-    {_config["Candidate:Phone"]}
-    {_config["Candidate:Email"]}
+    {_config["Candidate:FullName"] ?? "Name Not Configured"}
+    {_config["Candidate:Phone"] ?? "Phone Not Configured"}
+    {_config["Candidate:Email"] ?? "Email Not Configured"}
 
     {today}
     --------------------------------
@@ -132,7 +133,7 @@ public class CoverLetterService : ICoverLetterService
     Do NOT list every technology.
     Do NOT summarize the resume.
     Focus on relevance and impact.
-    Always add "Sincerely, {_config["Candidate:FullName"]}" at the end.
+    Always add "Sincerely, {_config["Candidate:FullName"] ?? "Name Not Configured"}" at the end.
 
     Return ONLY the finished letter.
     """;

@@ -39,23 +39,23 @@ public class PdfResumeExporter
 
                 page.Header().ShowOnce().Column(header =>
                 {
-                    header.Item().Text(_config["Candidate:FullName"])
+                    header.Item().Text(_config["Candidate:FullName"] ?? "Name Not Configured")
                         .FontSize(20)
                         .Bold();
 
                     header.Item().Text(text =>
                     {
-                        text.Span(_config["Candidate:Phone"]);
+                        text.Span(_config["Candidate:Phone"] ?? "Phone Not Configured");
                     });
 
                     header.Item().Text(text =>
                     {
-                        text.Span(_config["Candidate:Email"]);
+                        text.Span(_config["Candidate:Email"] ?? "Email Not Configured");
                     });
 
                     header.Item().Text(text =>
                     {
-                        text.Span(_config["Candidate:LinkedIn"]);
+                        text.Span(_config["Candidate:LinkedIn"] ?? "LinkedIn Not Configured");
                     });
 
                     header.Spacing(15);
@@ -92,9 +92,9 @@ public class PdfResumeExporter
                     // Add early career section if configured
                     col.Item().Column(expCol =>
                     {
-                        expCol.Item().Text($"{_config["Candidate:Career:EarlyCareerLabel"]} ({_config["Candidate:Career:StartYear"]} - {lastYear})")
+                        expCol.Item().Text($"{_config["Candidate:Career:EarlyCareerLabel"] ?? "Early Career"} ({_config["Candidate:Career:StartYear"] ?? "N/A"} - {lastYear})")
                             .Bold();
-                        expCol.Item().Text($"• {_config["Candidate:Career:Description"]}");
+                        expCol.Item().Text($"• {_config["Candidate:Career:Description"] ?? "Early career description not configured."}");
                     });
 
                     // EDUCATION SECTION

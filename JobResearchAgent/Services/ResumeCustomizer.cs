@@ -11,7 +11,8 @@ public class ResumeCustomizer
 
     public ResumeCustomizer(OpenAIClient client, IConfiguration config)
     {
-        var model = config["AI:Model"]!;
+        var model = config["AI:Model"]
+            ?? throw new InvalidOperationException("AI:Model configuration is missing.");
         _chat = client.GetChatClient(model);
     }
 
@@ -105,12 +106,15 @@ Target Job Description:
 
     private string CleanJson(string raw)
     {
+        if (string.IsNullOrWhiteSpace(raw))
+            throw new InvalidOperationException("LLM returned empty response.");
+
         var start = raw.IndexOf('{');
         var end = raw.LastIndexOf('}');
 
         if (start >= 0 && end > start)
             return raw[start..(end + 1)];
 
-        throw new Exception("LLM did not return valid JSON.");
+        throw new InvalidOperationException("LLM did not return valid JSON.");
     }
 }

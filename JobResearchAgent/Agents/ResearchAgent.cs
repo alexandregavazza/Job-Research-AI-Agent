@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace JobResearchAgent;
 
@@ -7,11 +8,13 @@ public class ResearchAgent
 {
     private readonly IEnumerable<IJobSource> _sources;
     private readonly ILogger<ResearchAgent> _logger;
+    private readonly AgentPolicy _policy;
 
-    public ResearchAgent(IEnumerable<IJobSource> sources, ILogger<ResearchAgent> logger)
+    public ResearchAgent(IEnumerable<IJobSource> sources, ILogger<ResearchAgent> logger, IOptions<AgentPolicy> policy)
     {
         _sources = sources;
         _logger = logger;
+        _policy = policy.Value;
     }
 
     public async Task<List<JobPosting>> RunAsync()
@@ -51,47 +54,60 @@ public class ResearchAgent
     /// </summary>
     private string BuildSearchQuery()
     {
-        var keywords = new[]
-        {
-            ".NET",
-            "C#",
-            "SQL",
-            "AWS",
-            "Azure",
-            "Angular"
-        };
-
-        var seniority = new[]
-        {
-            "Senior",
-            "Mid",
-            "Lead",
-            "Software Engineer",
-            "Backend Engineer",
-            "Full Stack"
-        };
-
-        var workType = new[]
-        {
-            "Remote",
-            "Hybrid"
-        };
-
         var sb = new StringBuilder();
 
-        sb.Append("(");
-        sb.Append(string.Join(" OR ", keywords));
-        sb.Append(")");
+        // 1️⃣ Keywords (Role titles you're targeting)
+        if (_policy.Keywords.Any())
+        {
+            sb.Append("(");
+            sb.Append(string.Join(" OR ", _policy.Keywords.Select(Escape)));
+            sb.Append(")");
+        }
 
-        sb.Append(" AND (");
-        sb.Append(string.Join(" OR ", seniority));
-        sb.Append(")");
+        // 2️⃣ Seniority levels
+        if (_policy.Levels.Any())
+        {
+            sb.Append(" AND (");
+            sb.Append(string.Join(" OR ", _policy.Levels.Select(Escape)));
+            sb.Append(")");
+        }
 
-        sb.Append(" AND (");
-        sb.Append(string.Join(" OR ", workType));
-        sb.Append(")");
+        // 3️⃣ Work model (Remote / Hybrid logic)
+        var workModes = new List<string>();
+
+        if (_policy.RemoteOnly)
+        {
+            workModes.Add("Remote");
+        }
+        else
+        {
+            workModes.Add("Onsite");
+
+            if (_policy.AllowHybrid)
+                workModes.Add("Hybrid");
+
+            workModes.Add("Remote");
+        }
+
+        if (workModes.Any())
+        {
+            sb.Append(" AND (");
+            sb.Append(string.Join(" OR ", workModes.Select(Escape)));
+            sb.Append(")");
+        }
 
         return sb.ToString();
+    }
+
+    private static string Escape(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return value;
+
+        // If the value contains spaces, wrap it in quotes so LinkedIn treats it as one term
+        return value.Contains(' ')
+            ? $"\"{value}\""
+            : value;
     }
 
     /// <summary>

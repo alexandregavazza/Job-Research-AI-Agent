@@ -9,7 +9,7 @@ public class JobRepository
 
     public JobRepository(string connection)
     {
-        _connection = connection;
+        _connection = connection ?? throw new ArgumentNullException(nameof(connection));
     }
 
     public async Task SaveAsync(IEnumerable<JobPosting> jobs)

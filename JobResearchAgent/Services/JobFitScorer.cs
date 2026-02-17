@@ -11,7 +11,8 @@ public class JobFitScorer
 
     public JobFitScorer(OpenAIClient client, IConfiguration config)
     {
-        var model = config["AI:Model"]!;
+        var model = config["AI:Model"]
+            ?? throw new InvalidOperationException("AI:Model configuration is missing.");
         _chat = client.GetChatClient(model);
     }
 

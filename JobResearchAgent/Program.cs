@@ -3,7 +3,6 @@ using JobResearchAgent.Matching;
 using JobResearchAgent.Services;
 using OpenAI;
 using QuestPDF.Infrastructure;
-using Microsoft.Extensions.AI;
 
 // ✅ Set QuestPDF license ONCE at startup
 QuestPDF.Settings.License = LicenseType.Community;
@@ -11,13 +10,16 @@ QuestPDF.Settings.License = LicenseType.Community;
 var builder = Host.CreateApplicationBuilder(args);
 
 // Read connection string from config
-var connectionString = builder.Configuration.GetConnectionString("Default");
+var connectionString = builder.Configuration.GetConnectionString("Default")
+    ?? throw new InvalidOperationException("Database connection string 'Default' is not configured.");
 
 // Register infrastructure
 builder.Services.AddSingleton(new JobRepository(connectionString));
 
-var apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
-var model = builder.Configuration["AI:Model"]!;
+var apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY")
+    ?? throw new InvalidOperationException("OPENAI_API_KEY environment variable is not set.");
+var model = builder.Configuration["AI:Model"]
+    ?? throw new InvalidOperationException("AI:Model configuration is missing.");
 
 // Register OpenAI client
 var openAIClient = new OpenAIClient(apiKey);
