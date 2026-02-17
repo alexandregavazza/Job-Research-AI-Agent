@@ -6,25 +6,28 @@ public class ApplicationResult
     public string Status { get; set; } = "";
     public string? ExternalApplicationId { get; set; }
     public string? Error { get; set; }
+    public string? ScreenshotPath { get; set; }
 
-    public static ApplicationResult CreateSuccess(string? externalId)
+    public static ApplicationResult CreateSuccess(string? externalId, string? screenshotPath = null)
     {
         return new ApplicationResult
         {
             Success = true,
             Status = "submitted",
-            ExternalApplicationId = externalId
+            ExternalApplicationId = externalId,
+            ScreenshotPath = screenshotPath
         };
     }
 
-    public static ApplicationResult CreateFailure(string? externalId, string error)
+    public static ApplicationResult CreateFailure(string? externalId, string error, string? screenshotPath = null)
     {
         return new ApplicationResult
         {
             Success = false,
             Status = "failed",
             ExternalApplicationId = externalId,
-            Error = error
+            Error = error,
+            ScreenshotPath = screenshotPath
         };
     }
 }

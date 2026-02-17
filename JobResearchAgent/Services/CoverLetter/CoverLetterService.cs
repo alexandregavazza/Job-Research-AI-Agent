@@ -137,8 +137,24 @@ public class CoverLetterService : ICoverLetterService
                 {string.Join("\n", e.Highlights.Select(a => "- " + a))}
                 """));
 
+        // Detect if job is in Brazil with Portuguese description
+        var isBrazil = job.Location?.ToLowerInvariant().Contains("brazil") ?? false;
+        var descriptionLower = job.Description?.ToLowerInvariant() ?? "";
+        var isPortuguese = isBrazil && (
+            descriptionLower.Contains("você") ||
+            descriptionLower.Contains("será") ||
+            descriptionLower.Contains("através") ||
+            descriptionLower.Contains("experiência") ||
+            descriptionLower.Contains("responsabilidades") ||
+            descriptionLower.Contains("conhecimento"));
+
+        var languageInstruction = isPortuguese
+            ? "IMPORTANT: Write the entire cover letter in Portuguese (PT-BR), as the job description is in Portuguese."
+            : "";
+
                     return $"""
                 Write a tailored cover letter for this role.
+                {languageInstruction}
 
                 The letter MUST follow this EXACT structure:
 
@@ -183,6 +199,7 @@ public class CoverLetterService : ICoverLetterService
                 - Sound like a senior engineer writing directly to a hiring manager.
                 - 220–300 words max.
                 - Use natural business prose (no lists).
+                - If the job is in the USA, naturally mention that the candidate is a Canadian citizen and can apply for a TN Visa to work in the United States. Otherwise, if it's anywhere in Canada, Brazil, Singapore or any other location it MUST not be added to the cover letter.
 
                 Do NOT invent experience.
                 Do NOT list every technology.

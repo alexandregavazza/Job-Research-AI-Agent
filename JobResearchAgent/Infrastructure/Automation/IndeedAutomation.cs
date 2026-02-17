@@ -1,5 +1,6 @@
 using JobResearchAgent.Application;
 using Microsoft.Extensions.Options;
+using System.IO;
 
 namespace JobResearchAgent.Infrastructure.Automation;
 
@@ -20,6 +21,7 @@ public class IndeedAutomation : IApplicationAutomation
         JobPosting job,
         string resumePath,
         string coverLetterPath,
+        string? screenshotPath,
         CancellationToken ct = default)
     {
         try
@@ -69,11 +71,44 @@ public class IndeedAutomation : IApplicationAutomation
             // Wait for confirmation
             await _browser.WaitForSelectorAsync(_options.SuccessIndicatorSelector, ct);
 
-            return ApplicationResult.CreateSuccess(job.ExternalJobId ?? "unknown");
+            if (!string.IsNullOrWhiteSpace(screenshotPath))
+            {
+                await _browser.TakeScreenshotAsync(screenshotPath, ct);
+            }
+
+            return ApplicationResult.CreateSuccess(job.ExternalJobId ?? "unknown", screenshotPath);
         }
         catch (Exception ex)
         {
-            return ApplicationResult.CreateFailure(job.ExternalJobId ?? "unknown", ex.Message);
+            var failurePath = AppendSuffix(screenshotPath, "failure");
+            if (!string.IsNullOrWhiteSpace(failurePath))
+            {
+                await _browser.TakeScreenshotAsync(failurePath, ct);
+            }
+
+            return ApplicationResult.CreateFailure(job.ExternalJobId ?? "unknown", ex.Message, failurePath);
         }
+    }
+
+    private static string? AppendSuffix(string? path, string suffix)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return null;
+        }
+
+        var directory = Path.GetDirectoryName(path);
+        var name = Path.GetFileNameWithoutExtension(path);
+        var extension = Path.GetExtension(path);
+
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return path;
+        }
+
+        var fileName = $"{name}_{suffix}{extension}";
+        return string.IsNullOrWhiteSpace(directory)
+            ? fileName
+            : Path.Combine(directory, fileName);
     }
 }

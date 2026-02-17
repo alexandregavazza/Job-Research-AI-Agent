@@ -7,4 +7,5 @@ public class ApplicationPolicy
     public int DelayBetweenApplicationsSeconds { get; init; }
     public string DocumentsBasePath { get; init; } = "";
     public bool ScreenshotOnFailure { get; init; }
+    public string AllowedCompany { get; init; } = "";
 }

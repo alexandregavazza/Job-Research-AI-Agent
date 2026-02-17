@@ -4,6 +4,7 @@ using JobResearchAgent.Infrastructure;
 using JobResearchAgent.Agents;
 using Microsoft.Extensions.Options;
 using JobResearchAgent.Application;
+using JobResearchAgent.Models;
 
 namespace JobResearchAgent;
 
@@ -24,6 +25,7 @@ public class Worker : BackgroundService
     private readonly MatchingConfiguration _matchingConfig;
     private readonly ApplicationAgent _applicationAgent;
     private readonly IApplicationLogRepository _applicationLogRepository;
+    private readonly ApplicationPolicy _applicationPolicy;
 
     public Worker(
         ILogger<Worker> logger,
@@ -37,7 +39,8 @@ public class Worker : BackgroundService
         IResumeLoader resumeLoader,
         IOptions<MatchingConfiguration> matchingConfig,
         ApplicationAgent applicationAgent,
-        IApplicationLogRepository applicationLogRepository)
+        IApplicationLogRepository applicationLogRepository,
+        IOptions<ApplicationPolicy> applicationPolicy)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _agent = agent ?? throw new ArgumentNullException(nameof(agent));
@@ -50,6 +53,7 @@ public class Worker : BackgroundService
         _matchingConfig = matchingConfig?.Value ?? throw new ArgumentNullException(nameof(matchingConfig));
         _applicationAgent = applicationAgent ?? throw new ArgumentNullException(nameof(applicationAgent));
         _applicationLogRepository = applicationLogRepository ?? throw new ArgumentNullException(nameof(applicationLogRepository));
+        _applicationPolicy = applicationPolicy?.Value ?? throw new ArgumentNullException(nameof(applicationPolicy));
 
         if (resumeLoader == null)
             throw new ArgumentNullException(nameof(resumeLoader));
@@ -91,6 +95,17 @@ public class Worker : BackgroundService
                 job.MatchScore = result.Score;
                 qualifiedJobs.Add(job);
 
+                // TESTING ONLY: Restrict automation to a single company if configured.
+                if (!string.IsNullOrWhiteSpace(_applicationPolicy.AllowedCompany)
+                    && !job.Company.Contains(_applicationPolicy.AllowedCompany, StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger.LogInformation(
+                        "Skipping job {JobId} because company does not match test filter: {Company}",
+                        job.ExternalJobId,
+                        _applicationPolicy.AllowedCompany);
+                    continue;
+                }
+
                 if (!string.IsNullOrWhiteSpace(job.ExternalJobId)
                     && await _applicationLogRepository.WasJobInsertedWithinDaysAsync(
                         job.ExternalJobId,
@@ -117,6 +132,23 @@ public class Worker : BackgroundService
 
                 var pdfCoverLetterPath = _coverLetterExporter.Export(coverLetter);
                 _logger.LogInformation("Generated PDF cover letter at {PdfPath}", pdfCoverLetterPath);
+
+                var log = new ApplicationLog
+                {
+                    ExternalJobId = job.ExternalJobId ?? "unknown",
+                    JobTitle = job.Title,
+                    Company = job.Company,
+                    Location = job.Location,
+                    Url = job.Url,
+                    Source = job.Source,
+                    ResumePath = pdfResumePath,
+                    CoverLetterPath = pdfCoverLetterPath,
+                    MatchScore = result.Score,
+                    Status = "applied",
+                    Notes = "Dry run: application automation disabled"
+                };
+
+                await _applicationLogRepository.InsertAsync(log, stoppingToken);
             
                 /*await _applicationAgent.ExecuteAsync(
                     job,

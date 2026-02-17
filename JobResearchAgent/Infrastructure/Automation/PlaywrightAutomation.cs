@@ -41,16 +41,61 @@ public sealed class PlaywrightAutomation : IBrowserAutomation
     public async Task NavigateAsync(string url, CancellationToken ct)
     {
         EnsureInitialized();
-        await _page!.GotoAsync(url, new PageGotoOptions
+        
+        try
         {
-            WaitUntil = WaitUntilState.NetworkIdle
-        });
+            // Try fast load first (just wait for DOM)
+            await _page!.GotoAsync(url, new PageGotoOptions
+            {
+                WaitUntil = WaitUntilState.DOMContentLoaded,
+                Timeout = 30000 // 30 seconds
+            });
+        }
+        catch (TimeoutException)
+        {
+            // If that times out, try with no wait at all - just navigate
+            try
+            {
+                await _page!.GotoAsync(url, new PageGotoOptions
+                {
+                    WaitUntil = WaitUntilState.Commit,  // Just wait for navigation to commit
+                    Timeout = 15000
+                });
+            }
+            catch
+            {
+                // If even that fails, the page might already be loading - just continue
+                // Page might be partially loaded which is often enough
+            }
+        }
+        
+        // Give it extra time for critical content to render
+        await Task.Delay(5000);
     }
 
     public async Task ClickAsync(string selector, CancellationToken ct)
     {
         EnsureInitialized();
-        await _page!.ClickAsync(selector);
+        
+        // Wait for element to be visible and enabled before clicking
+        await _page!.WaitForSelectorAsync(selector, new PageWaitForSelectorOptions
+        {
+            State = WaitForSelectorState.Visible,
+            Timeout = _options.TimeoutMs
+        });
+        
+        // Scroll into view if needed
+        await _page.Locator(selector).ScrollIntoViewIfNeededAsync();
+        
+        // Wait a moment for any animations/overlays to finish
+        await Task.Delay(1000);
+        
+        // Click with force (to bypass any overlays)
+        await _page.ClickAsync(selector, new PageClickOptions
+        {
+            Force = true,
+            Timeout = _options.TimeoutMs
+        });
     }
 
     public async Task FillAsync(string selector, string value, CancellationToken ct)
@@ -76,6 +121,52 @@ public sealed class PlaywrightAutomation : IBrowserAutomation
         EnsureInitialized();
         var element = await _page!.QuerySelectorAsync(selector);
         return element != null;
+    }
+
+    public async Task TakeScreenshotAsync(string filePath, CancellationToken ct)
+    {
+        EnsureInitialized();
+
+        var directory = Path.GetDirectoryName(filePath);
+        if (!string.IsNullOrWhiteSpace(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        await _page!.ScreenshotAsync(new PageScreenshotOptions
+        {
+            Path = filePath,
+            FullPage = true
+        });
+    }
+
+    public async Task<string> GetCurrentUrlAsync(CancellationToken ct)
+    {
+        EnsureInitialized();
+        return _page!.Url;
+    }
+
+    public async Task<string> GetPageTitleAsync(CancellationToken ct)
+    {
+        EnsureInitialized();
+        return await _page!.TitleAsync();
+    }
+
+    public async Task<string?> GetAttributeAsync(string selector, string attributeName, CancellationToken ct)
+    {
+        EnsureInitialized();
+        var element = await _page!.QuerySelectorAsync(selector);
+        if (element == null)
+            return null;
+        
+        return await element.GetAttributeAsync(attributeName);
+    }
+
+    public async Task<string?> EvaluateJavaScriptAsync(string script, CancellationToken ct)
+    {
+        EnsureInitialized();
+        var result = await _page!.EvaluateAsync<string>(script);
+        return result;
     }
 
     private void EnsureInitialized()
