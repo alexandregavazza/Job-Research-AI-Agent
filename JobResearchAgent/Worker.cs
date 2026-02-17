@@ -23,6 +23,7 @@ public class Worker : BackgroundService
     private readonly PdfCoverLetterExporter _coverLetterExporter;
     private readonly MatchingConfiguration _matchingConfig;
     private readonly ApplicationAgent _applicationAgent;
+    private readonly IApplicationLogRepository _applicationLogRepository;
 
     public Worker(
         ILogger<Worker> logger,
@@ -35,7 +36,8 @@ public class Worker : BackgroundService
         PdfCoverLetterExporter coverLetterExporter,
         IResumeLoader resumeLoader,
         IOptions<MatchingConfiguration> matchingConfig,
-        ApplicationAgent applicationAgent)
+        ApplicationAgent applicationAgent,
+        IApplicationLogRepository applicationLogRepository)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _agent = agent ?? throw new ArgumentNullException(nameof(agent));
@@ -47,6 +49,7 @@ public class Worker : BackgroundService
         _coverLetterExporter = coverLetterExporter ?? throw new ArgumentNullException(nameof(coverLetterExporter));
         _matchingConfig = matchingConfig?.Value ?? throw new ArgumentNullException(nameof(matchingConfig));
         _applicationAgent = applicationAgent ?? throw new ArgumentNullException(nameof(applicationAgent));
+        _applicationLogRepository = applicationLogRepository ?? throw new ArgumentNullException(nameof(applicationLogRepository));
 
         if (resumeLoader == null)
             throw new ArgumentNullException(nameof(resumeLoader));
@@ -87,6 +90,18 @@ public class Worker : BackgroundService
             {
                 job.MatchScore = result.Score;
                 qualifiedJobs.Add(job);
+
+                if (!string.IsNullOrWhiteSpace(job.ExternalJobId)
+                    && await _applicationLogRepository.WasJobInsertedWithinDaysAsync(
+                        job.ExternalJobId,
+                        15,
+                        stoppingToken))
+                {
+                    _logger.LogInformation(
+                        "Skipping resume and cover letter for recent job {JobId}",
+                        job.ExternalJobId);
+                    continue;
+                }
 
                 var tailored = await _resumeCustomizer.CustomizeAsync(
                 _resume.HumanText,
