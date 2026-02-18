@@ -4,7 +4,7 @@
     "Arn": "arn:aws:ecs:sa-east-1:418725627679:cluster/job-research-agent",
     "RoleArn": "arn:aws:iam::418725627679:role/JobResearchAgentEventBridgeRole",
     "EcsParameters": {
-      "TaskDefinitionArn": "arn:aws:ecs:sa-east-1:418725627679:task-definition/job-research-agent-task:3",
+      "TaskDefinitionArn": "arn:aws:ecs:sa-east-1:418725627679:task-definition/job-research-agent-task:4",
       "TaskCount": 1,
       "LaunchType": "FARGATE",
       "NetworkConfiguration": {
