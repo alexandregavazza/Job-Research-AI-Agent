@@ -1,24 +1,15 @@
-using OpenAI;
 using OpenAI.Chat;
-using Microsoft.Extensions.Configuration;
 using System.Text.Json;
 
 namespace JobResearchAgent.Services;
 
 public class JobFitScorer
 {
-    private readonly ChatClient _chat;
+    private readonly IChatCompletionClient _chat;
 
-    public JobFitScorer(OpenAIClient client, IConfiguration config)
+    public JobFitScorer(IChatCompletionClient chat)
     {
-        if (client == null)
-            throw new ArgumentNullException(nameof(client));
-        if (config == null)
-            throw new ArgumentNullException(nameof(config));
-        
-        var model = config["AI:Model"]
-            ?? throw new InvalidOperationException("AI:Model configuration is missing.");
-        _chat = client.GetChatClient(model);
+        _chat = chat ?? throw new ArgumentNullException(nameof(chat));
     }
 
     public async Task<(double score, string reason)> ScoreAsync(
@@ -28,24 +19,15 @@ public class JobFitScorer
     {
         var prompt = BuildPrompt(resume, jobTitle, jobDescription);
 
-        var response = await _chat.CompleteChatAsync(
-            new ChatMessage[]
-            {
-                new SystemChatMessage("You are a senior software engineering recruiter."),
-                new UserChatMessage(prompt)
-            },
+        var content = await _chat.CompleteAsync(
+            "You are a senior software engineering recruiter.",
+            prompt,
             new ChatCompletionOptions
             {
                 Temperature = 0.0f,
                 TopP = 1.0f,
                 MaxOutputTokenCount = 300
-            }
-        );
-
-        var content = string.Join("",
-            response.Value.Content
-                .Where(c => c.Kind == ChatMessageContentPartKind.Text)
-                .Select(c => c.Text));
+            });
         
         var cleaned = CleanJson(content);
 

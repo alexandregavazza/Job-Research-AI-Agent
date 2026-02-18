@@ -1,24 +1,16 @@
 using System.Text.Json;
 using JobResearchAgent.Models;
-using OpenAI;
 using OpenAI.Chat;
 
 namespace JobResearchAgent.Services;
 
 public class ResumeCustomizer
 {
-    private readonly ChatClient _chat;
+    private readonly IChatCompletionClient _chat;
 
-    public ResumeCustomizer(OpenAIClient client, IConfiguration config)
+    public ResumeCustomizer(IChatCompletionClient chat)
     {
-        if (client == null)
-            throw new ArgumentNullException(nameof(client));
-        if (config == null)
-            throw new ArgumentNullException(nameof(config));
-        
-        var model = config["AI:Model"]
-            ?? throw new InvalidOperationException("AI:Model configuration is missing.");
-        _chat = client.GetChatClient(model);
+        _chat = chat ?? throw new ArgumentNullException(nameof(chat));
     }
 
     public async Task<TailoredResume> CustomizeAsync(
@@ -28,25 +20,15 @@ public class ResumeCustomizer
     {
         var prompt = BuildPrompt(baseResume, jobTitle, jobDescription);
 
-        var response = await _chat.CompleteChatAsync(
-            new ChatMessage[]
-            {
-                new SystemChatMessage(
-                    "You are an expert technical recruiter rewriting resumes to maximize interview chances."),
-                new UserChatMessage(prompt)
-            },
+        var content = await _chat.CompleteAsync(
+            "You are an expert technical recruiter rewriting resumes to maximize interview chances.",
+            prompt,
             new ChatCompletionOptions
             {
                 Temperature = 0.3f,
                 TopP = 1.0f,
                 MaxOutputTokenCount = 1200
-            }
-        );
-
-        var content = string.Join("",
-            response.Value.Content
-                .Where(c => c.Kind == ChatMessageContentPartKind.Text)
-                .Select(c => c.Text));
+            });
 
         var cleaned = CleanJson(content);
 

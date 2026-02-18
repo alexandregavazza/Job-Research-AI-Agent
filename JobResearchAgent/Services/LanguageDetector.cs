@@ -11,7 +11,7 @@ public static class LanguageDetector
     /// </summary>
     /// <param name="text">The text to analyze</param>
     /// <returns>True if the text is detected as Portuguese, false otherwise</returns>
-    public static bool IsPortuguese(string text)
+    public static bool IsPortuguese(string? text)
     {
         if (string.IsNullOrWhiteSpace(text))
             return false;

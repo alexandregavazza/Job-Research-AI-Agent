@@ -1,12 +1,11 @@
 using JobResearchAgent.Models;
-using OpenAI;
 using OpenAI.Chat;
 
 namespace JobResearchAgent.Services.CoverLetter;
 
 public class CoverLetterService : ICoverLetterService
 {
-    private readonly ChatClient _chat;
+    private readonly IChatCompletionClient _chat;
     private readonly ILogger<CoverLetterService> _logger;
     private readonly IConfiguration _config;
     private const string SystemPrompt = """
@@ -24,18 +23,16 @@ public class CoverLetterService : ICoverLetterService
         - 220–300 words maximum.
         """;
 
-    public CoverLetterService(OpenAIClient client, IConfiguration config, ILogger<CoverLetterService> logger)
+    public CoverLetterService(IChatCompletionClient chat, IConfiguration config, ILogger<CoverLetterService> logger)
     {
-        if (client == null)
-            throw new ArgumentNullException(nameof(client));
+        if (chat == null)
+            throw new ArgumentNullException(nameof(chat));
         if (config == null)
             throw new ArgumentNullException(nameof(config));
         if (logger == null)
             throw new ArgumentNullException(nameof(logger));
-        
-        var model = config["AI:Model"]
-            ?? throw new InvalidOperationException("AI:Model configuration is missing.");
-        _chat = client.GetChatClient(model);
+
+        _chat = chat;
         _config = config;
         _logger = logger;
     }
@@ -47,12 +44,9 @@ public class CoverLetterService : ICoverLetterService
     {
         var prompt = BuildPrompt(job, resume);
 
-        var response = await _chat.CompleteChatAsync(
-            new ChatMessage[]
-            {
-                new SystemChatMessage(SystemPrompt),
-                new UserChatMessage(prompt)
-            },
+        var text = await _chat.CompleteAsync(
+            SystemPrompt,
+            prompt,
             new ChatCompletionOptions
             {
                 Temperature = 0.3f,
@@ -60,11 +54,6 @@ public class CoverLetterService : ICoverLetterService
                 MaxOutputTokenCount = 500
             },
             ct);
-
-        var text = string.Join("",
-            response.Value.Content
-                .Where(c => c.Kind == ChatMessageContentPartKind.Text)
-                .Select(c => c.Text));
 
         return new GeneratedCoverLetter
         {

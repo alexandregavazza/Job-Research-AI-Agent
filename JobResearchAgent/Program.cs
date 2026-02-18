@@ -36,6 +36,7 @@ var model = builder.Configuration["AI:Model"]
 // Register OpenAI client
 var openAIClient = new OpenAIClient(apiKey);
 builder.Services.AddSingleton(openAIClient);
+builder.Services.AddSingleton<IChatCompletionClient, OpenAIChatCompletionClient>();
 
 // Register sources (tools)
 builder.Services.AddSingleton<JobFitScorer>();
