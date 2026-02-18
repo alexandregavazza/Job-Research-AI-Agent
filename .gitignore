@@ -20,3 +20,5 @@ JobResearchAgent/appsettings.*.json
 
 # Protect resume files
 JobResearchAgent/Profiles/resume.*.txt
+logfile
+JobResearchAgent/appsettings.json.backup
