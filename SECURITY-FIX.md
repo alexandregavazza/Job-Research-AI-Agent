@@ -1,42 +1,157 @@
 # Removing Sensitive Data from Git
 
-## ⚠️ CRITICAL: Your appsettings.json is already in Git!
+## ✅ COMPLETED: Sensitive data has been cleaned!
 
-Your `appsettings.json` and `appsettings.Development.json` files are currently tracked by Git, which means:
-- They're in your repository history
-- If you've pushed to GitHub/remote, your personal data is already there
+The following files have been removed from Git history:
+- `appsettings.json` and `appsettings.Development.json` (database credentials, API keys)
+- `resume.human.txt` and `resume.ai.txt` (personal information, phone numbers, addresses)
 
-## Immediate Action Required
+All sensitive data has been:
+- Removed from Git tracking
+- Cleaned from entire repository history (using git filter-branch)
+- Force pushed to remote (GitHub)
+- Replaced with example files containing mock data
 
-### Option 1: Quick Fix (Removes from future commits only)
+## ⚠️ CRITICAL: Rotate Your Credentials!
 
-This prevents the files from being tracked going forward, but they remain in Git history:
+Even though files are removed from Git, you should **immediately** change:
 
-```powershell
-# Navigate to repository root
-cd "C:\Users\alexa\Documents\AI Agent"
+1. **OpenAI API Key**: Generate new key at https://platform.openai.com/api-keys
+2. **Database Password**: Change your PostgreSQL password from "postgres" to something strong
+3. **Check GitHub**: Visit https://github.com/YOUR_USERNAME/Job-Research-AI-Agent/settings/security_analysis
+   - Check for "Secret scanning alerts"
+   - GitHub may have detected exposed secrets
 
-# Remove files from Git tracking (but keep them locally)
-git rm --cached JobResearchAgent/appsettings.json
-git rm --cached JobResearchAgent/appsettings.Development.json
+## Files Now Protected
 
-# Commit the changes
-git add .gitignore
-git add JobResearchAgent/appsettings.Example.json
-git add SETUP.md
-git commit -m "chore: remove sensitive config files and add .gitignore protection"
+The following files are in `.gitignore` and will never be committed:
+- `JobResearchAgent/appsettings.json`
+- `JobResearchAgent/appsettings.Development.json`
+- `JobResearchAgent/Profiles/resume.human.txt`
+- `JobResearchAgent/Profiles/resume.ai.txt`
+- `*.pdf` (generated resumes and cover letters)
 
-# Push changes
-git push
-```
-
-**Note**: This doesn't remove the files from Git history. Anyone with access to your repository history can still see the old versions.
+Your actual files are backed up as:
+- `appsettings.json.backup`
+- `resume.human.txt.backup`
+- `resume.ai.txt.backup`
 
 ---
 
-### Option 2: Complete Fix (Removes from history - RECOMMENDED)
+## How the Cleanup Was Done
 
-This completely removes sensitive data from Git history:
+For reference, here's what was executed:
+
+### Step 1: Remove appsettings files from history
+
+```powershell
+# Backup files
+Copy-Item JobResearchAgent/appsettings.json JobResearchAgent/appsettings.json.backup
+
+# Remove from Git tracking
+git rm --cached JobResearchAgent/appsettings.json JobResearchAgent/appsettings.Development.json
+
+# Remove from ALL history
+git filter-branch --force --index-filter `
+  "git rm --cached --ignore-unmatch JobResearchAgent/appsettings.json JobResearchAgent/appsettings.Development.json" `
+  --prune-empty --tag-name-filter cat -- --all
+
+# Force push to remote
+git push origin --force --all
+```
+
+### Step 2: Remove resume files from history
+
+```powershell
+# Backup files
+Copy-Item JobResearchAgent/Profiles/resume.human.txt JobResearchAgent/Profiles/resume.human.txt.backup
+Copy-Item JobResearchAgent/Profiles/resume.ai.txt JobResearchAgent/Profiles/resume.ai.txt.backup
+
+# Remove from Git tracking
+git rm --cached JobResearchAgent/Profiles/resume.human.txt JobResearchAgent/Profiles/resume.ai.txt
+
+# Remove from ALL history
+git filter-branch --force --index-filter `
+  "git rm --cached --ignore-unmatch 'JobResearchAgent/Profiles/resume.human.txt' 'JobResearchAgent/Profiles/resume.ai.txt'" `
+  --prune-empty --tag-name-filter cat -- --all
+
+# Clean up and force push
+git gc --prune=now --aggressive
+git push origin --force --all
+```
+
+### Step 3: Verification
+
+```powershell
+# Verify no sensitive data in main branch
+git log main -S "alexandre.gavazza@gmail.com" --oneline  # Should be empty or only in security commits
+git log main -S "+55 (12) 9 9245-7070" --oneline          # Should be empty
+git log main -S "Password=postgres" --oneline             # Should be empty
+
+# Verify only example files are tracked
+git ls-files | Select-String -Pattern "appsettings|resume"
+```
+
+---
+
+## If You Need to Share This Repository
+
+### For Future Commits
+
+The `.gitignore` is now configured to permanently block:
+- Configuration files: `appsettings.json`, `appsettings.Development.json`
+- Resume files: `resume.human.txt`, `resume.ai.txt`
+- Generated PDFs: `*.pdf`
+
+New team members should:
+1. Clone the repository
+2. Copy `appsettings.Example.json` to `appsettings.json`
+3. Fill in their own credentials (see [SETUP.md](SETUP.md))
+4. Copy example resume files and add their own content
+
+---
+
+## Prevention for the Future
+
+### Pre-commit Hook (Optional)
+
+Create `.git/hooks/pre-commit` to prevent accidental commits:
+
+```bash
+#!/bin/sh
+if git diff --cached --name-only | grep -E "appsettings\.json|resume\.(human|ai)\.txt"; then
+  echo "ERROR: Attempting to commit sensitive files!"
+  echo "Please remove them from your commit."
+  exit 1
+fi
+```
+
+Make it executable:
+```powershell
+chmod +x .git/hooks/pre-commit
+```
+
+### Using git-secrets
+
+Install and configure [git-secrets](https://github.com/awslabs/git-secrets):
+
+```powershell
+# Install via Chocolatey (Windows)
+choco install git-secrets
+
+# Configure
+git secrets --install
+git secrets --register-aws  # Scans for AWS keys
+git secrets --add 'sk-[a-zA-Z0-9]{48}'  # OpenAI API key pattern
+```
+
+---
+
+## Historical Reference
+
+The commands below were part of earlier attempts - **these are now completed**:
+
+### Option 1: Quick Fix (COMPLETED)
 
 ```powershell
 # Navigate to repository root
