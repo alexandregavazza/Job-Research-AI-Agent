@@ -21,5 +21,6 @@
     </None>
     <PackageReference Include="OpenAI" Version="*" />
     <PackageReference Include="QuestPDF" Version="2026.2.0" />
+    <PackageReference Include="System.Memory.Data" Version="10.0.3" />
   </ItemGroup>
 </Project>
