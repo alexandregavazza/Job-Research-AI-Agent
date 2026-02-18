@@ -489,7 +489,97 @@ aws events put-targets --rule job-research-agent-evening --targets file://evenin
 
 ---
 
-## Verification and Monitoring
+## Part 9: Docker Build and Push (Final)
+
+### 48. Update application settings for S3
+In `appsettings.json`, restore S3 bucket configuration:
+```json
+"Storage": {
+  "S3Bucket": "job-research-agent-alexandregavazza-2026",
+  "S3Prefix": "documents"
+}
+```
+
+### 49. Rebuild Docker image
+From workspace root:
+```powershell
+docker build -t job-research-agent-fargate:latest -f .\JobResearchAgent\Dockerfile .
+```
+
+### 50. Tag image for ECR
+```powershell
+docker tag job-research-agent-fargate:latest 418725627679.dkr.ecr.sa-east-1.amazonaws.com/job-research-agent-fargate:latest
+```
+
+### 51. Push image to ECR
+```powershell
+docker push 418725627679.dkr.ecr.sa-east-1.amazonaws.com/job-research-agent-fargate:latest
+```
+
+### 52. Update ECS task definition with S3 configuration
+Update `ecs-task-definition.json` to include S3 environment variables:
+```json
+"environment": [
+  {
+    "name": "ASPNETCORE_ENVIRONMENT",
+    "value": "Production"
+  },
+  {
+    "name": "Storage__S3Bucket",
+    "value": "job-research-agent-alexandregavazza-2026"
+  },
+  {
+    "name": "Storage__S3Prefix",
+    "value": "documents"
+  }
+]
+```
+
+### 53. Register updated task definition
+```powershell
+aws ecs register-task-definition --cli-input-json file://ecs-task-definition.json --region sa-east-1
+```
+Output: `job-research-agent-task:3`
+
+### 54. Update EventBridge targets with new revision
+Update both `morning-target.json` and `evening-target.json`:
+```json
+"TaskDefinitionArn": "arn:aws:ecs:sa-east-1:418725627679:task-definition/job-research-agent-task:3"
+```
+
+Then update both rules:
+```powershell
+aws events put-targets --rule job-research-agent-morning --targets file://morning-target.json --region sa-east-1
+aws events put-targets --rule job-research-agent-evening --targets file://evening-target.json --region sa-east-1
+```
+
+---
+
+## Testing the Deployment
+
+### Manual Test Run
+Trigger a task immediately:
+```powershell
+aws ecs run-task --cluster job-research-agent --task-definition job-research-agent-task:3 --launch-type FARGATE --network-configuration "awsvpcConfiguration={subnets=[subnet-446fa30d,subnet-5079d736,subnet-6ee05435],assignPublicIp=ENABLED}" --region sa-east-1
+```
+
+### Monitor Logs
+```powershell
+aws logs tail /ecs/job-research-agent --follow --region sa-east-1
+```
+
+### Check S3 Documents
+```powershell
+aws s3 ls s3://job-research-agent-alexandregavazza-2026/documents/ --recursive
+```
+
+### Verify Database
+```powershell
+$env:PGPASSWORD="YOUR_MASTER_PASSWORD"
+psql -h job-research-agent-db.chsiiyek8wor.sa-east-1.rds.amazonaws.com -U postgres -d jobsdb -c "SELECT COUNT(*) FROM jobs;"
+```
+
+---
 
 ### Monitor CloudWatch Logs
 ```powershell

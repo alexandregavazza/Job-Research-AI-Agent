@@ -15,6 +15,14 @@
         {
           "name": "ASPNETCORE_ENVIRONMENT",
           "value": "Production"
+        },
+        {
+          "name": "Storage__S3Bucket",
+          "value": "job-research-agent-alexandregavazza-2026"
+        },
+        {
+          "name": "Storage__S3Prefix",
+          "value": "documents"
         }
       ],
       "secrets": [

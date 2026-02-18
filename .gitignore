@@ -25,3 +25,5 @@ logfile
 JobResearchAgent/appsettings.json.backup
 JobResearchAgent/Profiles/resume.ai.txt.backup
 JobResearchAgent/Profiles/resume.human.txt.backup
+export_data.dump
+export_data.sql
