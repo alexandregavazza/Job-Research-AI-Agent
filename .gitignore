@@ -18,7 +18,8 @@ JobResearchAgent/appsettings.*.json
 # Generated documents with personal info
 *.pdf
 
-# Protect resume files
-JobResearchAgent/Profiles/resume.*.txt
+# Protect resume files (but allow examples)
+JobResearchAgent/Profiles/resume.human.txt
+JobResearchAgent/Profiles/resume.ai.txt
 logfile
 JobResearchAgent/appsettings.json.backup

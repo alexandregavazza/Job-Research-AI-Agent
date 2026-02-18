@@ -1,0 +1,47 @@
+JOHN DOE
+john.doe@example.com | +1-555-123-4567 | linkedin.com/in/johndoe
+
+PROFESSIONAL SUMMARY
+Results-driven Full Stack Developer with 20+ years of expertise in .NET, Angular, Python, and cloud technologies (AWS, Azure). Proven track record leading cross-functional teams, architecting scalable solutions, and implementing DevOps practices. Specialized in digital transformation, CI/CD automation, and enterprise application development.
+
+CORE COMPETENCIES
+• Backend: C#, .NET Core, Python, Java
+• Frontend: Angular, TypeScript, JavaScript, HTML5, CSS3
+• Cloud & DevOps: AWS (ECS, Lambda, S3), Azure, Terraform, Docker, Kubernetes
+• Databases: SQL Server, PostgreSQL, Oracle, MongoDB
+• Tools & Practices: Git, GitHub Actions, Agile/Scrum, TDD, Microservices
+
+PROFESSIONAL EXPERIENCE
+
+Senior Software Engineer | Tech Corp | Jan 2020 - Present
+• Architected microservices platform serving 100K+ daily users
+• Implemented automated CI/CD pipelines reducing deployment time by 60%
+• Led team of 8 developers in Agile environment
+• Technologies: .NET Core, Angular, AWS, PostgreSQL
+
+DevOps Engineer | Cloud Solutions Inc | Mar 2015 - Dec 2019
+• Designed infrastructure-as-code using Terraform and CloudFormation
+• Maintained 99.9% uptime for production systems
+• Automated monitoring and alerting systems
+• Technologies: Python, AWS, Docker, Jenkins
+
+Software Engineer | Enterprise Tech | Jun 2010 - Feb 2015
+• Developed enterprise web applications for finance sector
+• Optimized database queries improving performance by 40%
+• Implemented security best practices and compliance standards
+• Technologies: C#, ASP.NET, SQL Server, Angular
+
+EDUCATION
+Bachelor of Science in Computer Science
+State University | 2006 - 2010
+GPA: 3.8/4.0
+
+CERTIFICATIONS
+• AWS Certified Solutions Architect
+• Microsoft Certified: Azure Developer Associate
+• Certified Scrum Master (CSM)
+
+PROJECTS
+• Insurance Platform Modernization: Led migration of legacy system to cloud-native architecture
+• Financial Trading Dashboard: Built real-time analytics platform processing 1M+ transactions/day
+• Automation Framework: Created internal tools reducing operational tasks by 30%

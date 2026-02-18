@@ -1,0 +1,24 @@
+JOHN DOE
+US: +1 (555) 123-4567 / CA: +1 (555) 987-6543
+john.doe@example.com / linkedin.com/in/johndoe/
+
+SUMMARY
+Full Stack Developer with 20+ years of experience delivering robust, scalable solutions across industries including pharmaceutical, finance, and insurance. I bring a versatile background that combines software engineering, DevOps, and solution architecture, including five years of hands-on DevOps engineering and four years as a Solutions Architect specializing in OnBase technologies. Technically fluent in .NET (C#, .NET Core), Angular, JavaScript, SQL Server, Oracle, AWS, Azure, and Python, I've designed and maintained CI/CD pipelines using Terraform, GitHub Actions, and ECS. My career has been rooted in Agile environments, where I have led cross-functional teams and driven digital transformation initiatives from planning to production. I managed engineering teams of up to 8 developers, mentored junior engineers, and collaborated closely with product and business stakeholders. My projects have included high-availability insurance platforms, secure financial applications, and automation systems that improved operational efficiency by over 30%.
+
+CODING
+- C#, Python, Javascript/Typescript, HTML, CSS, Java, Angular
+- .NET Framework and .NET Core
+
+EXPERIENCE
+Senior Software Engineer | Tech Corp | 2020 - Present
+• Led development of microservices architecture
+• Implemented CI/CD pipelines
+• Mentored junior developers
+
+Software Engineer | Software Inc | 2015 - 2020
+• Developed web applications using .NET and Angular
+• Optimized database queries improving performance by 40%
+
+EDUCATION
+Bachelor of Science in Computer Science
+University Name | 2010 - 2014
