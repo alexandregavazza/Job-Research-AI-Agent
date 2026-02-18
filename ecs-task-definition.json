@@ -1,0 +1,40 @@
+{
+  "family": "job-research-agent-task",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "2048",
+  "executionRoleArn": "arn:aws:iam::418725627679:role/JobResearchAgentEcsExecutionRole",
+  "taskRoleArn": "arn:aws:iam::418725627679:role/JobResearchAgentEcsTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "job-research-agent-container",
+      "image": "418725627679.dkr.ecr.sa-east-1.amazonaws.com/job-research-agent-fargate:latest",
+      "essential": true,
+      "environment": [
+        {
+          "name": "ASPNETCORE_ENVIRONMENT",
+          "value": "Production"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "OPENAI_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:sa-east-1:418725627679:secret:JobResearchAgent/OpenAI-h3C7zp"
+        },
+        {
+          "name": "ConnectionStrings__Default",
+          "valueFrom": "arn:aws:secretsmanager:sa-east-1:418725627679:secret:JobResearchAgent/DatabaseConnection-24Di9R"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/job-research-agent",
+          "awslogs-region": "sa-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}

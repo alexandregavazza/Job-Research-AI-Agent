@@ -1,0 +1,18 @@
+[
+  {
+    "Id": "1",
+    "Arn": "arn:aws:ecs:sa-east-1:418725627679:cluster/job-research-agent",
+    "RoleArn": "arn:aws:iam::418725627679:role/JobResearchAgentEventBridgeRole",
+    "EcsParameters": {
+      "TaskDefinitionArn": "arn:aws:ecs:sa-east-1:418725627679:task-definition/job-research-agent-task:2",
+      "TaskCount": 1,
+      "LaunchType": "FARGATE",
+      "NetworkConfiguration": {
+        "awsvpcConfiguration": {
+          "Subnets": ["subnet-446fa30d", "subnet-5079d736", "subnet-6ee05435"],
+          "AssignPublicIp": "ENABLED"
+        }
+      }
+    }
+  }
+]
