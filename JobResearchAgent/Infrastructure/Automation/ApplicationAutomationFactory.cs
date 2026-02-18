@@ -1,4 +1,5 @@
 using JobResearchAgent.Application;
+using JobResearchAgent.Models;
 
 namespace JobResearchAgent.Infrastructure.Automation;
 public class ApplicationAutomationFactory
@@ -7,7 +8,7 @@ public class ApplicationAutomationFactory
 
     public ApplicationAutomationFactory(IServiceProvider provider)
     {
-        _provider = provider;
+        _provider = provider ?? throw new ArgumentNullException(nameof(provider));
     }
 
     public IApplicationAutomation Resolve(JobPosting job)

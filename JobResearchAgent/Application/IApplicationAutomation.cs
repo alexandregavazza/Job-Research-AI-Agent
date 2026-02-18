@@ -1,3 +1,5 @@
+using JobResearchAgent.Models;
+
 namespace JobResearchAgent.Application;
 
 public interface IApplicationAutomation

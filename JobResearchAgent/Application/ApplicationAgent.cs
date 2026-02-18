@@ -1,8 +1,7 @@
 using JobResearchAgent.Infrastructure;
 using JobResearchAgent.Models;
+using JobResearchAgent.Services.FileManipulator;
 using Microsoft.Extensions.Options;
-using System.IO;
-using System.Linq;
 
 namespace JobResearchAgent.Application;
 public class ApplicationAgent
@@ -11,17 +10,20 @@ public class ApplicationAgent
     private readonly IApplicationLogRepository _logRepository;
     private readonly ApplicationPolicy _policy;
     private readonly ILogger<ApplicationAgent> _logger;
+    private readonly IFileSanitizer _fileSanitizer;
 
     public ApplicationAgent(
         IApplicationAutomation automation,
         IApplicationLogRepository logRepository,
         IOptions<ApplicationPolicy> policy,
-        ILogger<ApplicationAgent> logger)
+        ILogger<ApplicationAgent> logger,
+        IFileSanitizer fileSanitizer)
     {
-        _automation = automation;
-        _logRepository = logRepository;
-        _policy = policy.Value;
-        _logger = logger;
+        _automation = automation ?? throw new ArgumentNullException(nameof(automation));
+        _logRepository = logRepository ?? throw new ArgumentNullException(nameof(logRepository));
+        _policy = policy?.Value ?? throw new ArgumentNullException(nameof(policy));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _fileSanitizer = fileSanitizer ?? throw new ArgumentNullException(nameof(fileSanitizer));
     }
 
     public async Task ExecuteAsync(JobPosting job,
@@ -78,19 +80,12 @@ public class ApplicationAgent
         var screenshotFolder = Path.Combine(_policy.DocumentsBasePath, dateFolder, "Screenshot");
         Directory.CreateDirectory(screenshotFolder);
 
-        var safeCompany = SanitizeFileName(job.Company);
-        var safeTitle = SanitizeFileName(job.Title);
+        var safeCompany = _fileSanitizer.Sanitize(job.Company);
+        var safeTitle = _fileSanitizer.Sanitize(job.Title);
         var timestamp = DateTime.UtcNow.ToString("HHmmss");
         var fileName = $"{safeCompany}_{safeTitle}_{timestamp}.png";
 
         return Path.Combine(screenshotFolder, fileName);
-    }
-
-    private static string SanitizeFileName(string value)
-    {
-        var invalidChars = Path.GetInvalidFileNameChars();
-        var sanitized = new string(value.Select(c => invalidChars.Contains(c) ? '_' : c).ToArray());
-        return string.IsNullOrWhiteSpace(sanitized) ? "unknown" : sanitized;
     }
 
     private bool AskForApproval(JobPosting job)

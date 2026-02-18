@@ -1,5 +1,6 @@
 using JobResearchAgent.Matching;
 using JobResearchAgent.Services;
+using JobResearchAgent.Services.CoverLetter;
 using JobResearchAgent.Infrastructure;
 using JobResearchAgent.Agents;
 using Microsoft.Extensions.Options;

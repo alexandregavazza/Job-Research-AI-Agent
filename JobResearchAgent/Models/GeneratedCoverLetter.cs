@@ -1,3 +1,5 @@
+namespace JobResearchAgent.Models;
+
 public class GeneratedCoverLetter
 {
     public string JobId { get; set; } = default!;

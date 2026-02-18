@@ -1,6 +1,7 @@
 using JobResearchAgent;
 using JobResearchAgent.Matching;
 using JobResearchAgent.Services;
+using JobResearchAgent.Services.CoverLetter;
 using JobResearchAgent.Infrastructure;
 using OpenAI;
 using QuestPDF.Infrastructure;

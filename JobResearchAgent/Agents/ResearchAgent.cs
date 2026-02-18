@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.Extensions.Options;
+using JobResearchAgent.Models;
 
 namespace JobResearchAgent.Agents;
 
@@ -11,9 +12,9 @@ public class ResearchAgent
 
     public ResearchAgent(IEnumerable<IJobSource> sources, ILogger<ResearchAgent> logger, IOptions<AgentPolicy> policy)
     {
-        _sources = sources;
-        _logger = logger;
-        _policy = policy.Value;
+        _sources = sources ?? throw new ArgumentNullException(nameof(sources));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _policy = policy?.Value ?? throw new ArgumentNullException(nameof(policy));
     }
 
     public async Task<List<JobPosting>> RunAsync()

@@ -13,7 +13,7 @@ public sealed class PlaywrightAutomation : IBrowserAutomation
 
     public PlaywrightAutomation(IOptions<BrowserAutomationOptions> options)
     {
-        _options = options.Value;
+        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
     }
 
     public async Task InitializeAsync(CancellationToken ct)
@@ -140,10 +140,10 @@ public sealed class PlaywrightAutomation : IBrowserAutomation
         });
     }
 
-    public async Task<string> GetCurrentUrlAsync(CancellationToken ct)
+    public Task<string> GetCurrentUrlAsync(CancellationToken ct)
     {
         EnsureInitialized();
-        return _page!.Url;
+        return Task.FromResult(_page!.Url);
     }
 
     public async Task<string> GetPageTitleAsync(CancellationToken ct)

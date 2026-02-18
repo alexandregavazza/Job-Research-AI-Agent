@@ -1,5 +1,6 @@
 using Microsoft.Playwright;
 using Microsoft.Extensions.Options;
+using JobResearchAgent.Models;
 
 namespace JobResearchAgent.Agents;
 

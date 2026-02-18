@@ -1,7 +1,9 @@
-using JobResearchAgent.Services;
+using JobResearchAgent.Models;
 using JobResearchAgent.Services.FileManipulator;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
+
+namespace JobResearchAgent.Services.CoverLetter;
 
 /// <summary>
 /// PDF cover letter exporter following SOLID principles with dependency injection

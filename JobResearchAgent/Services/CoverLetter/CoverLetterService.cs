@@ -2,6 +2,8 @@ using JobResearchAgent.Models;
 using OpenAI;
 using OpenAI.Chat;
 
+namespace JobResearchAgent.Services.CoverLetter;
+
 public class CoverLetterService : ICoverLetterService
 {
     private readonly ChatClient _chat;
@@ -24,6 +26,13 @@ public class CoverLetterService : ICoverLetterService
 
     public CoverLetterService(OpenAIClient client, IConfiguration config, ILogger<CoverLetterService> logger)
     {
+        if (client == null)
+            throw new ArgumentNullException(nameof(client));
+        if (config == null)
+            throw new ArgumentNullException(nameof(config));
+        if (logger == null)
+            throw new ArgumentNullException(nameof(logger));
+        
         var model = config["AI:Model"]
             ?? throw new InvalidOperationException("AI:Model configuration is missing.");
         _chat = client.GetChatClient(model);
@@ -200,6 +209,7 @@ public class CoverLetterService : ICoverLetterService
                 - 220–300 words max.
                 - Use natural business prose (no lists).
                 - If the job is in the USA, naturally mention that the candidate is a Canadian citizen and can apply for a TN Visa to work in the United States. Otherwise, if it's anywhere in Canada, Brazil, Singapore or any other location it MUST not be added to the cover letter.
+                - If the role is not in Brazil, naturally mention that the candidate is willing to relocate.
 
                 Do NOT invent experience.
                 Do NOT list every technology.

@@ -1,6 +1,5 @@
 using JobResearchAgent.Application;
-using System.IO;
-using Microsoft.Extensions.Logging;
+using JobResearchAgent.Models;
 
 namespace JobResearchAgent.Infrastructure.Automation;
 
@@ -11,8 +10,8 @@ public class LinkedInAutomation : IApplicationAutomation
 
     public LinkedInAutomation(IBrowserAutomation browser, ILogger<LinkedInAutomation> logger)
     {
-        _browser = browser;
-        _logger = logger;
+        _browser = browser ?? throw new ArgumentNullException(nameof(browser));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public async Task<ApplicationResult> ApplyAsync(
@@ -161,9 +160,12 @@ public class LinkedInAutomation : IApplicationAutomation
             // Instead of clicking, try to extract the URL the button points to
             string? targetUrl = null;
             
-            // Try getting href attribute
-            targetUrl = await _browser.GetAttributeAsync(usedSelector, "href", ct);
-            _logger.LogInformation("Href attribute: {Href}", targetUrl ?? "none");
+            // Try getting href attribute (with null check for usedSelector)
+            if (!string.IsNullOrWhiteSpace(usedSelector))
+            {
+                targetUrl = await _browser.GetAttributeAsync(usedSelector, "href", ct);
+                _logger.LogInformation("Href attribute: {Href}", targetUrl ?? "none");
+            }
             
             if (string.IsNullOrWhiteSpace(targetUrl))
             {
@@ -209,6 +211,11 @@ public class LinkedInAutomation : IApplicationAutomation
             }
             else
             {
+                if (string.IsNullOrWhiteSpace(usedSelector))
+                {
+                    throw new InvalidOperationException("No apply button selector found");
+                }
+                
                 _logger.LogInformation("Could not extract URL, trying to click button: {Selector}", usedSelector);
                 try
                 {

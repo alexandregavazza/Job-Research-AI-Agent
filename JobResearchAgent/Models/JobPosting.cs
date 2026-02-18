@@ -1,3 +1,5 @@
+namespace JobResearchAgent.Models;
+
 public class JobPosting
 {
     public required string Title { get; set; }

@@ -1,3 +1,5 @@
+using JobResearchAgent.Models;
+
 namespace JobResearchAgent.Agents;
 
 public interface IJobSource

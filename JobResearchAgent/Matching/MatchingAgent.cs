@@ -1,4 +1,5 @@
 using JobResearchAgent.Services;
+using JobResearchAgent.Models;
 using Microsoft.Extensions.Options;
 
 namespace JobResearchAgent.Matching;

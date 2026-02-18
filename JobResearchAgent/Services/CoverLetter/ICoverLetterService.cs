@@ -1,5 +1,7 @@
 using JobResearchAgent.Models;
 
+namespace JobResearchAgent.Services.CoverLetter;
+
 public interface ICoverLetterService
 {
     Task<GeneratedCoverLetter> GenerateAsync(

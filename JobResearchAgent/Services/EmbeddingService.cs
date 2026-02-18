@@ -6,12 +6,14 @@ namespace JobResearchAgent.Services;
 
 public class EmbeddingService
 {
-    [Obsolete]
+#pragma warning disable CS0618 // Type is obsolete - Semantic Kernel API migration pending
     private readonly ITextEmbeddingGenerationService _embedding;
 
-    [Obsolete]
     public EmbeddingService(IConfiguration config)
     {
+        if (config == null)
+            throw new ArgumentNullException(nameof(config));
+        
         var builder = Kernel.CreateBuilder();
         var apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
 
@@ -28,4 +30,5 @@ public class EmbeddingService
         var result = await _embedding.GenerateEmbeddingAsync(text);
         return result.ToArray();
     }
+#pragma warning restore CS0618
 }

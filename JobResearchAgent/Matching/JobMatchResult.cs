@@ -1,3 +1,5 @@
+using JobResearchAgent.Models;
+
 namespace JobResearchAgent.Matching;
 
 public class JobMatchResult

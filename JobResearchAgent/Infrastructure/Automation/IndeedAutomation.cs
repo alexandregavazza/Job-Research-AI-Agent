@@ -1,6 +1,6 @@
 using JobResearchAgent.Application;
+using JobResearchAgent.Models;
 using Microsoft.Extensions.Options;
-using System.IO;
 
 namespace JobResearchAgent.Infrastructure.Automation;
 
@@ -13,8 +13,8 @@ public class IndeedAutomation : IApplicationAutomation
         IBrowserAutomation browser,
         IOptions<IndeedAutomationOptions> options)
     {
-        _browser = browser;
-        _options = options.Value;
+        _browser = browser ?? throw new ArgumentNullException(nameof(browser));
+        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
     }
 
     public async Task<ApplicationResult> ApplyAsync(

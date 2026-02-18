@@ -1,4 +1,6 @@
 using Microsoft.Playwright;
+using Microsoft.Extensions.Options;
+using JobResearchAgent.Models;
 
 namespace JobResearchAgent.Agents;
 
@@ -7,10 +9,10 @@ public class IndeedSource : IJobSource
     private readonly ILogger<IndeedSource> _logger;
     private readonly AgentPolicy _policy;
 
-    public IndeedSource(ILogger<IndeedSource> logger, AgentPolicy policy)
+    public IndeedSource(ILogger<IndeedSource> logger, IOptions<AgentPolicy> policy)
     {
-        _logger = logger;
-        _policy = policy;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _policy = policy?.Value ?? throw new ArgumentNullException(nameof(policy));
     }
 
     public async Task<List<JobPosting>> SearchAsync(string _)
