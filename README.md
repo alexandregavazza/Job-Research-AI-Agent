@@ -7,7 +7,7 @@ Job Research AI Agent is an automated end-to-end pipeline for discovering, colle
 
 ## Architecture
 
-- **Program.cs**: Entry point. Configures dependency injection (following DIP), loads configuration, registers all services with their interfaces, and starts the background worker.
+- **Program.cs**: Entry point. Configures dependency injection (following DIP), loads configuration, registers services (and interfaces where applicable), and starts the background worker.
 - **Worker.cs**: Main pipeline orchestrator. Workflow: initializes semantic matcher, runs job research agent, evaluates jobs, generates tailored resumes and cover letters for qualified matches, and saves results.
 - **Agents/**: Core agent logic and job source integrations.
   - **ResearchAgent.cs**: Orchestrates job search across all sources, builds search queries, applies hard filters, and aggregates results.
@@ -52,10 +52,12 @@ Job Research AI Agent is an automated end-to-end pipeline for discovering, colle
   - **EmbeddingService.cs**: Generates text embeddings using OpenAI (Semantic Kernel).
   - **JobFitScorer.cs**: Uses OpenAI LLM to deeply score job fit and provide reasoning.
   - **ResumeCustomizer.cs**: Uses OpenAI LLM to generate tailored resumes for specific jobs.
+  - **LanguageDetector.cs**: Detects Portuguese job descriptions to decide resume/cover letter language.
+  - **IChatCompletionClient.cs / OpenAIChatCompletionClient.cs**: Abstraction for chat completions to simplify testing and mocking.
   - **PdfResumeExporter.cs**: Exports tailored resumes to PDF using QuestPDF.
   - **CoverLetter/**:
     - **ICoverLetterService.cs**: Interface for cover letter generation (follows DIP).
-    - **CoverLetterService.cs**: Uses OpenAI LLM to generate customized cover letters.
+    - **CoverLetterService.cs**: Uses OpenAI LLM to generate customized cover letters and applies language based on the job description.
     - **PdfCoverLetterExporter.cs**: Exports cover letters to PDF using QuestPDF.
   - **FileManipulator/**:
     - **IFileSanitizer.cs**: Interface for filename sanitization (follows ISP).
@@ -90,7 +92,7 @@ Job Research AI Agent is an automated end-to-end pipeline for discovering, colle
 - **AI:Model**: OpenAI model for LLM operations (e.g., "gpt-4")
 - **AI:EmbeddingModel**: OpenAI embedding model (e.g., "text-embedding-ada-002")
 - **Output:BasePath**: Base directory for generated PDF documents
-- **Candidate:*** : Your personal information (name, email, phone, LinkedIn, location, education)
+- **Candidate:*** : Your personal information (name, email, phone, LinkedIn, location, education, personal website). Optional fields used by exporters and cover letters include `Career:*`, and regional overrides like `PhoneBR`, `PhoneUS`, `PhoneCA`, `LocationBR`, `LocationUS`, `LocationCA`.
 
 ### Environment Variables
 - **OPENAI_API_KEY**: Your OpenAI API key (required)
@@ -270,7 +272,7 @@ C:\JobApplications\
 
 #### Program.cs
 - Configures dependency injection container following SOLID principles
-- Registers all services with their corresponding interfaces
+- Registers services and interfaces as needed (concrete types where appropriate)
 - Loads configuration from appsettings.json
 - Validates required environment variables (OPENAI_API_KEY)
 - Configures options pattern for all policy and configuration classes
@@ -368,7 +370,7 @@ C:\JobApplications\
 #### CoverLetterService.cs
 - Implements ICoverLetterService interface
 - Generates customized cover letters using OpenAI
-- Adapts format based on job location (supports multiple languages)
+- Uses job location for contact info and job description language for Portuguese output
 - Returns GeneratedCoverLetter model
 
 #### PdfResumeExporter.cs / PdfCoverLetterExporter.cs
