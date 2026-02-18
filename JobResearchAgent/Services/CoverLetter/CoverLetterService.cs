@@ -146,16 +146,8 @@ public class CoverLetterService : ICoverLetterService
                 {string.Join("\n", e.Highlights.Select(a => "- " + a))}
                 """));
 
-        // Detect if job is in Brazil with Portuguese description
-        var isBrazil = job.Location?.ToLowerInvariant().Contains("brazil") ?? false;
-        var descriptionLower = job.Description?.ToLowerInvariant() ?? "";
-        var isPortuguese = isBrazil && (
-            descriptionLower.Contains("você") ||
-            descriptionLower.Contains("será") ||
-            descriptionLower.Contains("através") ||
-            descriptionLower.Contains("experiência") ||
-            descriptionLower.Contains("responsabilidades") ||
-            descriptionLower.Contains("conhecimento"));
+        // Detect if job description is in Portuguese
+        var isPortuguese = LanguageDetector.IsPortuguese(job.Description ?? "");
 
         var languageInstruction = isPortuguese
             ? "IMPORTANT: Write the entire cover letter in Portuguese (PT-BR), as the job description is in Portuguese."

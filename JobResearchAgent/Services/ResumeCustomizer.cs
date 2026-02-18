@@ -57,6 +57,11 @@ public class ResumeCustomizer
     // ✅ STEP 4 — THIS is the prompt location
     private string BuildPrompt(string resume, string title, string description)
     {
+        var isPortuguese = LanguageDetector.IsPortuguese(description);
+        var languageInstruction = isPortuguese 
+            ? "Write the resume in Portuguese."
+            : "Write the resume in English.";
+
         return $@"
 Rewrite the candidate's resume so it is highly targeted to THIS specific job.
 
@@ -78,6 +83,7 @@ Rules:
 - Use human language, not robotic or generic phrasing.
 - Add my name, phone number, LinkedIn profile, my personal website, and email at the top of the resume.
 - Avoid creating more than 5 pages of content.
+- {languageInstruction}
 
 You are not summarizing.
 You are rewriting strategically like a recruiter would.
