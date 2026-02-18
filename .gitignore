@@ -8,3 +8,15 @@ obj/
 *.suo
 AI Agent.sln
 JobResearchAgent/playwright-profile/
+
+# Protect sensitive configuration files
+JobResearchAgent/appsettings.json
+JobResearchAgent/appsettings.Development.json
+JobResearchAgent/appsettings.*.json
+!JobResearchAgent/appsettings.Example.json
+
+# Generated documents with personal info
+*.pdf
+
+# Protect resume files
+JobResearchAgent/Profiles/resume.*.txt
