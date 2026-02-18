@@ -12,5 +12,9 @@ WORKDIR /app
 ENV PLAYWRIGHT_BROWSERS_PATH=0
 
 COPY --from=build /app/publish .
+COPY JobResearchAgent/Profiles ./Profiles
+
+# Install Playwright browsers using the PowerShell script
+RUN pwsh playwright.ps1 install chromium --with-deps
 
 ENTRYPOINT ["dotnet", "JobResearchAgent.dll"]

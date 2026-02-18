@@ -140,6 +140,34 @@ From workspace root:
 docker build -t job-research-agent-fargate:latest -f .\JobResearchAgent\Dockerfile .
 ```
 
+**Important:** Ensure your `Dockerfile` includes:
+1. **Profiles folder** with resume files:
+   ```dockerfile
+   COPY JobResearchAgent/Profiles ./Profiles
+   ```
+2. **Playwright browser installation**:
+   ```dockerfile
+   RUN pwsh playwright.ps1 install chromium --with-deps
+   ```
+
+Complete Dockerfile reference:
+```dockerfile
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+COPY JobResearchAgent/JobResearchAgent.csproj JobResearchAgent/
+RUN dotnet restore JobResearchAgent/JobResearchAgent.csproj
+COPY . .
+RUN dotnet publish JobResearchAgent/JobResearchAgent.csproj -c Release -o /app/publish
+
+FROM mcr.microsoft.com/playwright/dotnet:v1.58.0-jammy
+WORKDIR /app
+ENV PLAYWRIGHT_BROWSERS_PATH=0
+COPY --from=build /app/publish .
+COPY JobResearchAgent/Profiles ./Profiles
+RUN pwsh playwright.ps1 install chromium --with-deps
+ENTRYPOINT ["dotnet", "JobResearchAgent.dll"]
+```
+
 ### 14. Log in to ECR
 ```powershell
 aws ecr get-login-password --region sa-east-1 | docker login --username AWS --password-stdin 418725627679.dkr.ecr.sa-east-1.amazonaws.com
@@ -473,12 +501,12 @@ Update `ecs-task-definition.json` to include database secret:
 ```powershell
 aws ecs register-task-definition --cli-input-json file://ecs-task-definition.json --region sa-east-1
 ```
-Output: `job-research-agent-task:2`
+Output: `job-research-agent-task:3`
 
 ### 47. Update EventBridge targets with new revision
-Update both `morning-target.json` and `evening-target.json` to use revision 2:
+Update both `morning-target.json` and `evening-target.json` to use revision 3:
 ```json
-"TaskDefinitionArn": "arn:aws:ecs:sa-east-1:418725627679:task-definition/job-research-agent-task:2"
+"TaskDefinitionArn": "arn:aws:ecs:sa-east-1:418725627679:task-definition/job-research-agent-task:3"
 ```
 
 Then run:
@@ -491,14 +519,37 @@ aws events put-targets --rule job-research-agent-evening --targets file://evenin
 
 ## Part 9: Docker Build and Push (Final)
 
-### 48. Update application settings for S3
-In `appsettings.json`, restore S3 bucket configuration:
+### 48. Configure application settings securely
+
+**For Production (appsettings.json - tracked in git):**
+Use placeholder values for sensitive data:
 ```json
+"ConnectionStrings": {
+  "Default": "Host=job-research-agent-db.chsiiyek8wor.sa-east-1.rds.amazonaws.com;Port=5432;Database=jobsdb;Username=postgres;Password=YOUR_PASSWORD_HERE"
+},
 "Storage": {
-  "S3Bucket": "job-research-agent-alexandregavazza-2026",
+  "S3Bucket": "",
   "S3Prefix": "documents"
 }
 ```
+
+**For Local Development (appsettings.Development.json - in .gitignore):**
+Use real credentials (this file is NOT committed to git):
+```json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Debug",
+      "Microsoft.Hosting.Lifetime": "Information"
+    }
+  },
+  "ConnectionStrings": {
+    "Default": "Host=job-research-agent-db.chsiiyek8wor.sa-east-1.rds.amazonaws.com;Port=5432;Database=jobsdb;Username=postgres;Password=YOUR_ACTUAL_PASSWORD"
+  }
+}
+```
+
+**Note:** Production credentials come from AWS Secrets Manager via ECS task definition environment variables.
 
 ### 49. Rebuild Docker image
 From workspace root:
@@ -593,7 +644,94 @@ aws s3 ls s3://job-research-agent-alexandregavazza-2026/documents/ --recursive
 
 ### Manually trigger test run
 ```powershell
-aws ecs run-task --cluster job-research-agent --task-definition job-research-agent-task:2 --launch-type FARGATE --network-configuration "awsvpcConfiguration={subnets=[subnet-446fa30d,subnet-5079d736,subnet-6ee05435],assignPublicIp=ENABLED}" --region sa-east-1
+# Get valid subnet ID first
+$SUBNET=$(aws ec2 describe-subnets --region sa-east-1 --filters "Name=default-for-az,Values=true" --query "Subnets[0].SubnetId" --output text)
+
+# Run task
+aws ecs run-task --cluster job-research-agent --task-definition job-research-agent-task:3 --launch-type FARGATE --network-configuration "awsvpcConfiguration={subnets=[$SUBNET],securityGroups=[sg-057ec7832807d06ea],assignPublicIp=ENABLED}" --region sa-east-1
+```
+
+---
+
+## Troubleshooting Common Issues
+
+### Issue: "Human resume file not found"
+**Cause:** Docker image doesn't include the Profiles folder.
+
+**Solution:** 
+Ensure your Dockerfile has:
+```dockerfile
+COPY JobResearchAgent/Profiles ./Profiles
+```
+Rebuild and push the image (see step 13).
+
+---
+
+### Issue: "Playwright was just installed or updated"
+**Cause:** Playwright browsers aren't installed in the Docker container.
+
+**Solution:**
+Add to Dockerfile after copying files:
+```dockerfile
+RUN pwsh playwright.ps1 install chromium --with-deps
+```
+Rebuild and push the image.
+
+---
+
+### Issue: Task fails to start / subnet not found
+**Cause:** Invalid subnet ID in run-task command.
+
+**Solution:**
+Get valid subnet dynamically:
+```powershell
+$SUBNET=$(aws ec2 describe-subnets --region sa-east-1 --filters "Name=default-for-az,Values=true" --query "Subnets[0].SubnetId" --output text)
+```
+
+---
+
+### Issue: Can't connect to RDS from local machine
+**Cause:** Your IP is not in the security group.
+
+**Solution:**
+```powershell
+$MY_IP=$(Invoke-WebRequest -Uri 'https://checkip.amazonaws.com' -UseBasicParsing).Content.Trim()
+aws ec2 authorize-security-group-ingress --group-id sg-057ec7832807d06ea --protocol tcp --port 5432 --cidr "$MY_IP/32" --region sa-east-1 --description "My local IP"
+```
+
+---
+
+### Issue: Data export/import errors (JSON/timestamp issues)
+**Cause:** Using `--inserts` format doesn't properly escape JSON and complex data types.
+
+**Solution:**
+Use PostgreSQL's custom binary format:
+```powershell
+# Export
+pg_dump -U postgres -d jobsdb --data-only --format=custom --file=export_data.dump -t jobs -t job_tailored_resumes -t job_application_logs
+
+# Import
+$env:PGPASSWORD="YOUR_PASSWORD"
+pg_restore -h RDS_ENDPOINT -U postgres -d jobsdb -v export_data.dump
+```
+
+---
+
+### Monitoring Task Execution
+
+**View logs in real-time:**
+```powershell
+aws logs tail /ecs/job-research-agent --follow --region sa-east-1
+```
+
+**Check task status:**
+```powershell
+aws ecs describe-tasks --cluster job-research-agent --tasks TASK_ID --region sa-east-1 --query "tasks[0].{Status:lastStatus,StoppedReason:stoppedReason}"
+```
+
+**Query database for new records:**
+```sql
+SELECT COUNT(*) FROM job_application_logs WHERE created_at >= CURRENT_DATE;
 ```
 
 ---
@@ -603,7 +741,7 @@ aws ecs run-task --cluster job-research-agent --task-definition job-research-age
 - **S3 Bucket**: `job-research-agent-alexandregavazza-2026`
 - **ECR Repository**: `job-research-agent-fargate`
 - **ECS Cluster**: `job-research-agent`
-- **ECS Task Definition**: `job-research-agent-task:2`
+- **ECS Task Definition**: `job-research-agent-task:3`
 - **RDS PostgreSQL**: `job-research-agent-db` (PostgreSQL 16.12, db.t3.micro, 20GB)
 - **Security Groups**:
   - `job-research-agent-rds-sg` (PostgreSQL access)
