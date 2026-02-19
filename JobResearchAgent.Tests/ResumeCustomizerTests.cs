@@ -18,7 +18,14 @@ public class ResumeCustomizerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(responseJson);
 
-        var service = new ResumeCustomizer(chat.Object);
+        var promptService = new Mock<IPromptService>();
+        promptService.Setup(p => p.LoadSystemPrompt("ResumeCustomizer"))
+            .Returns("system");
+        promptService.Setup(p => p.LoadUserPrompt("ResumeCustomizer", It.IsAny<Dictionary<string, string>>()))
+            .Returns<string, Dictionary<string, string>>((_, placeholders) =>
+                $"Prompt: {placeholders.GetValueOrDefault("LANGUAGE_INSTRUCTION", string.Empty)}");
+
+        var service = new ResumeCustomizer(chat.Object, promptService.Object);
 
         var result = await service.CustomizeAsync("base", "title", "description");
 
@@ -45,7 +52,14 @@ public class ResumeCustomizerTests
             })
             .ReturnsAsync(responseJson);
 
-        var service = new ResumeCustomizer(chat.Object);
+        var promptService = new Mock<IPromptService>();
+        promptService.Setup(p => p.LoadSystemPrompt("ResumeCustomizer"))
+            .Returns("system");
+        promptService.Setup(p => p.LoadUserPrompt("ResumeCustomizer", It.IsAny<Dictionary<string, string>>()))
+            .Returns<string, Dictionary<string, string>>((_, placeholders) =>
+                $"Prompt: {placeholders.GetValueOrDefault("LANGUAGE_INSTRUCTION", string.Empty)}");
+
+        var service = new ResumeCustomizer(chat.Object, promptService.Object);
 
         await service.CustomizeAsync("base", "title", "Experiência sólida com responsabilidades e requisitos do cargo.");
 

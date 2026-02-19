@@ -23,7 +23,14 @@ public class CoverLetterServiceTests
 
         var config = BuildConfig();
         var logger = Mock.Of<ILogger<CoverLetterService>>();
-        var service = new CoverLetterService(chat.Object, config, logger);
+        var promptService = new Mock<IPromptService>();
+        promptService.Setup(p => p.LoadSystemPrompt("CoverLetter"))
+            .Returns("system");
+        promptService.Setup(p => p.LoadUserPrompt("CoverLetter", It.IsAny<Dictionary<string, string>>()))
+            .Returns<string, Dictionary<string, string>>((_, placeholders) =>
+                $"Prompt: {placeholders.GetValueOrDefault("LANGUAGE_INSTRUCTION", string.Empty)}");
+
+        var service = new CoverLetterService(chat.Object, config, logger, promptService.Object);
 
         var job = CreateJob("Remote", "English description", "job-1");
         var resume = CreateResume();
@@ -54,7 +61,14 @@ public class CoverLetterServiceTests
 
         var config = BuildConfig();
         var logger = Mock.Of<ILogger<CoverLetterService>>();
-        var service = new CoverLetterService(chat.Object, config, logger);
+        var promptService = new Mock<IPromptService>();
+        promptService.Setup(p => p.LoadSystemPrompt("CoverLetter"))
+            .Returns("system");
+        promptService.Setup(p => p.LoadUserPrompt("CoverLetter", It.IsAny<Dictionary<string, string>>()))
+            .Returns<string, Dictionary<string, string>>((_, placeholders) =>
+                $"Prompt: {placeholders.GetValueOrDefault("LANGUAGE_INSTRUCTION", string.Empty)}");
+
+        var service = new CoverLetterService(chat.Object, config, logger, promptService.Object);
 
         var job = CreateJob("Brazil", "Experiência sólida com responsabilidades e requisitos do cargo.", "job-2");
         var resume = CreateResume();
