@@ -32,7 +32,7 @@ public class IndeedSource : IJobSource
 
         var query = BuildQuery();
 
-        foreach (var country in _policy.Countries)
+        foreach (var country in _policy.CountriesTargeted)
         {
             try
             {
@@ -150,7 +150,7 @@ public class IndeedSource : IJobSource
         var encodedQuery = Uri.EscapeDataString(query);
 
         // Indeed uses "fromage" in days, not hours
-        var days = Math.Max(1, _policy.MaxAgeHours / 24);
+        var days = Math.Max(1, _policy.SearchJobsInTheLast / 24);
 
         return $"https://www.indeed.com/jobs" +
                $"?q={encodedQuery}" +

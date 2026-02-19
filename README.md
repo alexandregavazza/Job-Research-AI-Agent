@@ -11,7 +11,7 @@ Job Research AI Agent is an automated end-to-end pipeline for discovering, colle
 - **Worker.cs**: Main pipeline orchestrator. Workflow: initializes semantic matcher, runs job research agent, evaluates jobs, generates tailored resumes and cover letters for qualified matches, and saves results.
 - **Agents/**: Core agent logic and job source integrations.
   - **ResearchAgent.cs**: Orchestrates job search across all sources, builds search queries, applies hard filters, and aggregates results.
-  - **AgentPolicy.cs**: Defines search policy (countries, keywords, levels, remote/hybrid filter, max job age).
+  - **AgentPolicy.cs**: Defines search policy (countries targeted, keywords, levels, remote/hybrid filter, max job age).
   - **IJobSource.cs**: Interface for job board sources (follows ISP).
   - **LinkedInSource.cs**: Scrapes LinkedIn jobs using Playwright, applies policy filters, and parses job postings.
   - **IndeedSource.cs**: Scrapes Indeed jobs using Playwright, applies policy filters, and parses job postings.
@@ -72,7 +72,7 @@ Job Research AI Agent is an automated end-to-end pipeline for discovering, colle
 
 1. **Initialize**: Loads configuration, resumes, and initializes embedding models (Semantic Kernel with OpenAI).
 2. **Job Search**: ResearchAgent queries all configured sources (LinkedIn, Indeed) using AgentPolicy criteria.
-3. **Filtering**: Hard filters applied server-side (keywords, countries, seniority levels, remote/hybrid, max age).
+3. **Filtering**: Hard filters applied server-side (keywords, countries targeted, seniority levels, remote/hybrid, max age).
 4. **Semantic Matching**: Each job description is embedded and compared to the resume using cosine similarity.
 5. **Deep Scoring**: Jobs passing the semantic threshold (default 0.35) are scored by the LLM for precise fit and reasoning (0-100 scale).
 6. **Qualification**: Jobs scoring >= 70 are considered qualified matches.
@@ -104,7 +104,7 @@ Job Research AI Agent is an automated end-to-end pipeline for discovering, colle
 - **Resume files** in `Profiles/` folder: Already excluded from git via `.gitignore` to protect your personal information
 
 ### Optional Configuration
-- **AgentPolicy**: Job search criteria (countries, keywords, seniority levels, remote/hybrid filter, max age)
+- **AgentPolicy**: Job search criteria (countries targeted, keywords, seniority levels, remote/hybrid filter, max age)
 - **MatchingConfiguration**: Matching thresholds (MinimumSimilarityThreshold, ApplyThreshold, ReviewThreshold, QualificationThreshold)
 - **ApplicationPolicy**: Application automation settings (Enabled, RequireApproval, DelayBetweenApplicationsSeconds, AllowedCompany for testing)
 - **BrowserAutomation**: Browser settings for automation (Headless, SlowMo, Timeout, UserDataDir, Viewport)
@@ -132,10 +132,10 @@ Job Research AI Agent is an automated end-to-end pipeline for discovering, colle
     "Education": ["Degree, University, Year"]
   },
   "AgentPolicy": {
-    "MaxAgeHours": 48,
+    "SearchJobsInTheLast": 48,
     "RemoteOnly": false,
     "AllowHybrid": true,
-    "Countries": ["United States", "Canada"],
+    "CountriesTargeted": ["United States", "Canada"],
     "Keywords": [".NET", "C#", "Azure"],
     "Levels": ["Senior", "Lead"]
   },
@@ -458,7 +458,7 @@ Policy and configuration classes using options pattern:
 - Ensure sufficient disk space for browser binaries
 
 #### No Jobs Found
-- Check AgentPolicy configuration (keywords, countries)
+- Check AgentPolicy configuration (keywords, countries targeted)
 - Verify job boards are accessible from your network
 - Review logs for scraping errors
 - Try with RemoteOnly = false and broader keywords
@@ -469,7 +469,7 @@ Policy and configuration classes using options pattern:
 - Ensure QuestPDF license is set in Program.cs
 
 #### High API Costs
-- Reduce number of jobs evaluated (adjust MaxAgeHours)
+- Reduce number of jobs evaluated (adjust SearchJobsInTheLast)
 - Increase MinimumSimilarityThreshold to filter more aggressively
 - Limit job sources (comment out sources in Program.cs)
 

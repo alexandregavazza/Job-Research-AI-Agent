@@ -11,7 +11,7 @@ public class LocalDocumentStorage : IDocumentStorage
 
     public Task<string> StoreAsync(string filePath, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Using local storage. File saved at: {FilePath}", filePath);
+        //_logger.LogInformation("Using local storage. File saved at: {FilePath}", filePath);
         return Task.FromResult(filePath);
     }
 }

@@ -40,7 +40,7 @@ aws s3api create-bucket --bucket job-research-agent-alexandregavazza-2026 --regi
 ```
 
 ### 4. Create S3 write policy file
-Create `s3-write-policy.json`:
+Create `infra/aws/s3-write-policy.json`:
 ```json
 {
   "Version": "2012-10-17",
@@ -63,7 +63,7 @@ Create `s3-write-policy.json`:
 
 ### 5. Create IAM policy for S3 access
 ```powershell
-aws iam create-policy --policy-name JobResearchAgentS3Write --policy-document file://s3-write-policy.json
+aws iam create-policy --policy-name JobResearchAgentS3Write --policy-document file://infra/aws/s3-write-policy.json
 ```
 Output: `arn:aws:iam::418725627679:policy/JobResearchAgentS3Write`
 
@@ -72,7 +72,7 @@ Output: `arn:aws:iam::418725627679:policy/JobResearchAgentS3Write`
 ## Part 3: IAM Roles Setup
 
 ### 6. Create Lambda trust policy (kept for reference, not used in Fargate)
-Create `lambda-trust-policy.json`:
+Create `infra/aws/lambda-trust-policy.json`:
 ```json
 {
   "Version": "2012-10-17",
@@ -88,7 +88,7 @@ Create `lambda-trust-policy.json`:
 ```
 
 ### 7. Create ECS task trust policy
-Create `ecs-task-trust-policy.json`:
+Create `infra/aws/ecs-task-trust-policy.json`:
 ```json
 {
   "Version": "2012-10-17",
@@ -104,7 +104,7 @@ Create `ecs-task-trust-policy.json`:
 
 ### 8. Create ECS execution role
 ```powershell
-aws iam create-role --role-name JobResearchAgentEcsExecutionRole --assume-role-policy-document file://ecs-task-trust-policy.json
+aws iam create-role --role-name JobResearchAgentEcsExecutionRole --assume-role-policy-document file://infra/aws/ecs-task-trust-policy.json
 ```
 Output: `arn:aws:iam::418725627679:role/JobResearchAgentEcsExecutionRole`
 
@@ -115,7 +115,7 @@ aws iam attach-role-policy --role-name JobResearchAgentEcsExecutionRole --policy
 
 ### 10. Create ECS task role
 ```powershell
-aws iam create-role --role-name JobResearchAgentEcsTaskRole --assume-role-policy-document file://ecs-task-trust-policy.json
+aws iam create-role --role-name JobResearchAgentEcsTaskRole --assume-role-policy-document file://infra/aws/ecs-task-trust-policy.json
 ```
 Output: `arn:aws:iam::418725627679:role/JobResearchAgentEcsTaskRole`
 
@@ -194,7 +194,7 @@ aws secretsmanager create-secret --name JobResearchAgent/OpenAI --secret-string 
 Output: `arn:aws:secretsmanager:sa-east-1:418725627679:secret:JobResearchAgent/OpenAI-h3C7zp`
 
 ### 18. Create secrets access policy
-Create `secrets-policy.json`:
+Create `infra/aws/secrets-policy.json`:
 ```json
 {
   "Version": "2012-10-17",
@@ -212,7 +212,7 @@ Create `secrets-policy.json`:
 
 ### 19. Create IAM policy for secrets
 ```powershell
-aws iam create-policy --policy-name JobResearchAgentSecretsAccess --policy-document file://secrets-policy.json
+aws iam create-policy --policy-name JobResearchAgentSecretsAccess --policy-document file://infra/aws/secrets-policy.json
 ```
 Output: `arn:aws:iam::418725627679:policy/JobResearchAgentSecretsAccess`
 
@@ -249,7 +249,7 @@ aws ec2 describe-subnets --filters "Name=vpc-id,Values=vpc-1bbd807c" --region sa
 Output: `subnet-446fa30d subnet-5079d736 subnet-6ee05435`
 
 ### 25. Create ECS task definition file
-Create `ecs-task-definition.json`:
+Create `infra/aws/ecs-task-definition.json`:
 ```json
 {
   "family": "job-research-agent-task",
@@ -291,7 +291,7 @@ Create `ecs-task-definition.json`:
 
 ### 26. Register task definition
 ```powershell
-aws ecs register-task-definition --cli-input-json file://ecs-task-definition.json --region sa-east-1
+aws ecs register-task-definition --cli-input-json file://infra/aws/ecs-task-definition.json --region sa-east-1
 ```
 Output: `arn:aws:ecs:sa-east-1:418725627679:task-definition/job-research-agent-task:1`
 
@@ -300,7 +300,7 @@ Output: `arn:aws:ecs:sa-east-1:418725627679:task-definition/job-research-agent-t
 ## Part 7: EventBridge Scheduling Setup
 
 ### 27. Create EventBridge trust policy
-Create `eventbridge-trust-policy.json`:
+Create `infra/aws/eventbridge-trust-policy.json`:
 ```json
 {
   "Version": "2012-10-17",
@@ -316,12 +316,12 @@ Create `eventbridge-trust-policy.json`:
 
 ### 28. Create EventBridge execution role
 ```powershell
-aws iam create-role --role-name JobResearchAgentEventBridgeRole --assume-role-policy-document file://eventbridge-trust-policy.json
+aws iam create-role --role-name JobResearchAgentEventBridgeRole --assume-role-policy-document file://infra/aws/eventbridge-trust-policy.json
 ```
 Output: `arn:aws:iam::418725627679:role/JobResearchAgentEventBridgeRole`
 
 ### 29. Create EventBridge ECS policy
-Create `eventbridge-ecs-policy.json`:
+Create `infra/aws/eventbridge-ecs-policy.json`:
 ```json
 {
   "Version": "2012-10-17",
@@ -347,7 +347,7 @@ Create `eventbridge-ecs-policy.json`:
 
 ### 30. Create IAM policy for EventBridge
 ```powershell
-aws iam create-policy --policy-name JobResearchAgentEventBridgeEcsPolicy --policy-document file://eventbridge-ecs-policy.json
+aws iam create-policy --policy-name JobResearchAgentEventBridgeEcsPolicy --policy-document file://infra/aws/eventbridge-ecs-policy.json
 ```
 Output: `arn:aws:iam::418725627679:policy/JobResearchAgentEventBridgeEcsPolicy`
 
@@ -363,7 +363,7 @@ aws events put-rule --name job-research-agent-morning --schedule-expression "cro
 Output: `arn:aws:events:sa-east-1:418725627679:rule/job-research-agent-morning`
 
 ### 33. Create morning target configuration
-Create `morning-target.json`:
+Create `infra/aws/morning-target.json`:
 ```json
 [
   {
@@ -387,7 +387,7 @@ Create `morning-target.json`:
 
 ### 34. Attach morning target
 ```powershell
-aws events put-targets --rule job-research-agent-morning --targets file://morning-target.json --region sa-east-1
+aws events put-targets --rule job-research-agent-morning --targets file://infra/aws/morning-target.json --region sa-east-1
 ```
 
 ### 35. Create evening schedule (5pm Brazil / 8pm UTC)
@@ -397,7 +397,7 @@ aws events put-rule --name job-research-agent-evening --schedule-expression "cro
 Output: `arn:aws:events:sa-east-1:418725627679:rule/job-research-agent-evening`
 
 ### 36. Create evening target configuration
-Create `evening-target.json`:
+Create `infra/aws/evening-target.json`:
 ```json
 [
   {
@@ -421,7 +421,7 @@ Create `evening-target.json`:
 
 ### 37. Attach evening target
 ```powershell
-aws events put-targets --rule job-research-agent-evening --targets file://evening-target.json --region sa-east-1
+aws events put-targets --rule job-research-agent-evening --targets file://infra/aws/evening-target.json --region sa-east-1
 ```
 
 ---
@@ -458,7 +458,7 @@ aws secretsmanager create-secret --name JobResearchAgent/DatabaseConnection --se
 Output: `arn:aws:secretsmanager:sa-east-1:418725627679:secret:JobResearchAgent/DatabaseConnection-24Di9R`
 
 ### 43. Update secrets policy to include database access
-Update `secrets-policy.json`:
+Update `infra/aws/secrets-policy.json`:
 ```json
 {
   "Version": "2012-10-17",
@@ -479,11 +479,11 @@ Update `secrets-policy.json`:
 
 ### 44. Update IAM secrets policy
 ```powershell
-aws iam create-policy-version --policy-arn arn:aws:iam::418725627679:policy/JobResearchAgentSecretsAccess --policy-document file://secrets-policy.json --set-as-default
+aws iam create-policy-version --policy-arn arn:aws:iam::418725627679:policy/JobResearchAgentSecretsAccess --policy-document file://infra/aws/secrets-policy.json --set-as-default
 ```
 
 ### 45. Update ECS task definition with database connection
-Update `ecs-task-definition.json` to include database secret:
+Update `infra/aws/ecs-task-definition.json` to include database secret:
 ```json
 "secrets": [
   {
@@ -499,20 +499,20 @@ Update `ecs-task-definition.json` to include database secret:
 
 ### 46. Register updated task definition
 ```powershell
-aws ecs register-task-definition --cli-input-json file://ecs-task-definition.json --region sa-east-1
+aws ecs register-task-definition --cli-input-json file://infra/aws/ecs-task-definition.json --region sa-east-1
 ```
 Output: `job-research-agent-task:3`
 
 ### 47. Update EventBridge targets with new revision
-Update both `morning-target.json` and `evening-target.json` to use revision 3:
+Update both `infra/aws/morning-target.json` and `infra/aws/evening-target.json` to use revision 3:
 ```json
 "TaskDefinitionArn": "arn:aws:ecs:sa-east-1:418725627679:task-definition/job-research-agent-task:3"
 ```
 
 Then run:
 ```powershell
-aws events put-targets --rule job-research-agent-morning --targets file://morning-target.json --region sa-east-1
-aws events put-targets --rule job-research-agent-evening --targets file://evening-target.json --region sa-east-1
+aws events put-targets --rule job-research-agent-morning --targets file://infra/aws/morning-target.json --region sa-east-1
+aws events put-targets --rule job-research-agent-evening --targets file://infra/aws/evening-target.json --region sa-east-1
 ```
 
 ---
@@ -568,7 +568,7 @@ docker push 418725627679.dkr.ecr.sa-east-1.amazonaws.com/job-research-agent-farg
 ```
 
 ### 52. Update ECS task definition with S3 configuration
-Update `ecs-task-definition.json` to include S3 environment variables:
+Update `infra/aws/ecs-task-definition.json` to include S3 environment variables:
 ```json
 "environment": [
   {
@@ -588,20 +588,20 @@ Update `ecs-task-definition.json` to include S3 environment variables:
 
 ### 53. Register updated task definition
 ```powershell
-aws ecs register-task-definition --cli-input-json file://ecs-task-definition.json --region sa-east-1
+aws ecs register-task-definition --cli-input-json file://infra/aws/ecs-task-definition.json --region sa-east-1
 ```
 Output: `job-research-agent-task:3`
 
 ### 54. Update EventBridge targets with new revision
-Update both `morning-target.json` and `evening-target.json`:
+Update both `infra/aws/morning-target.json` and `infra/aws/evening-target.json`:
 ```json
 "TaskDefinitionArn": "arn:aws:ecs:sa-east-1:418725627679:task-definition/job-research-agent-task:3"
 ```
 
 Then update both rules:
 ```powershell
-aws events put-targets --rule job-research-agent-morning --targets file://morning-target.json --region sa-east-1
-aws events put-targets --rule job-research-agent-evening --targets file://evening-target.json --region sa-east-1
+aws events put-targets --rule job-research-agent-morning --targets file://infra/aws/morning-target.json --region sa-east-1
+aws events put-targets --rule job-research-agent-evening --targets file://infra/aws/evening-target.json --region sa-east-1
 ```
 
 ---
@@ -796,3 +796,4 @@ docker push 418725627679.dkr.ecr.sa-east-1.amazonaws.com/job-research-agent-farg
 - **Data Transfer**: Egress charges may apply
 
 **Estimated cost for 2 runs/day**: ~$10-20/month (excluding OpenAI API usage)
+

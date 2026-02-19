@@ -8,22 +8,9 @@ public class CoverLetterService : ICoverLetterService
     private readonly IChatCompletionClient _chat;
     private readonly ILogger<CoverLetterService> _logger;
     private readonly IConfiguration _config;
-    private const string SystemPrompt = """
-        You are a senior engineering hiring manager writing concise, credible cover letters.
+    private readonly IPromptService _promptService;
 
-        Rules:
-        - Do NOT summarize the resume.
-        - Do NOT invent skills or experience.
-        - Do NOT sound enthusiastic or sales-like.
-        - Avoid buzzwords.
-        - Use a formal tone, but not overly stiff.
-        - Use human-like language.
-        - Write like an experienced engineer.
-        - Focus on alignment with the role and business impact.
-        - 220–300 words maximum.
-        """;
-
-    public CoverLetterService(IChatCompletionClient chat, IConfiguration config, ILogger<CoverLetterService> logger)
+    public CoverLetterService(IChatCompletionClient chat, IConfiguration config, ILogger<CoverLetterService> logger, IPromptService promptService)
     {
         if (chat == null)
             throw new ArgumentNullException(nameof(chat));
@@ -31,10 +18,13 @@ public class CoverLetterService : ICoverLetterService
             throw new ArgumentNullException(nameof(config));
         if (logger == null)
             throw new ArgumentNullException(nameof(logger));
+        if (promptService == null)
+            throw new ArgumentNullException(nameof(promptService));
 
         _chat = chat;
         _config = config;
         _logger = logger;
+        _promptService = promptService;
     }
 
     public async Task<GeneratedCoverLetter> GenerateAsync(
@@ -42,11 +32,12 @@ public class CoverLetterService : ICoverLetterService
         TailoredResume resume,
         CancellationToken ct = default)
     {
-        var prompt = BuildPrompt(job, resume);
+        var systemPrompt = _promptService.LoadSystemPrompt("CoverLetter");
+        var userPrompt = BuildPrompt(job, resume);
 
         var text = await _chat.CompleteAsync(
-            SystemPrompt,
-            prompt,
+            systemPrompt,
+            userPrompt,
             new ChatCompletionOptions
             {
                 Temperature = 0.3f,
@@ -119,10 +110,8 @@ public class CoverLetterService : ICoverLetterService
     private string BuildPrompt(JobPosting job, TailoredResume resume)
     {
         var today = DateTime.UtcNow.ToString("MMMM dd, yyyy");
-
         var phone = ResolvePhoneByLocation(job);
         var location = ResolveLocationByJob(job);
-
         var skills = string.Join(", ", resume.KeySkills);
 
         var experiences = string.Join("\n\n",
@@ -135,70 +124,27 @@ public class CoverLetterService : ICoverLetterService
                 {string.Join("\n", e.Highlights.Select(a => "- " + a))}
                 """));
 
-        // Detect if job description is in Portuguese
         var isPortuguese = LanguageDetector.IsPortuguese(job.Description ?? "");
-
         var languageInstruction = isPortuguese
             ? "IMPORTANT: Write the entire cover letter in Portuguese (PT-BR), as the job description is in Portuguese."
             : "";
 
-                    return $"""
-                Write a tailored cover letter for this role.
-                {languageInstruction}
+        var placeholders = new Dictionary<string, string>
+        {
+            { "LANGUAGE_INSTRUCTION", languageInstruction },
+            { "FULL_NAME", _config["Candidate:FullName"] ?? "Name Not Configured" },
+            { "PHONE", phone },
+            { "EMAIL", _config["Candidate:Email"] ?? "Email Not Configured" },
+            { "LOCATION", location },
+            { "TODAY", today },
+            { "JOB_TITLE", job.Title ?? "" },
+            { "COMPANY", job.Company ?? "" },
+            { "JOB_DESCRIPTION", job.Description ?? "" },
+            { "PROFESSIONAL_SUMMARY", resume.ProfessionalSummary ?? "" },
+            { "SKILLS", skills },
+            { "EXPERIENCES", experiences }
+        };
 
-                The letter MUST follow this EXACT structure:
-
-                --------------------------------
-                {_config["Candidate:FullName"] ?? "Name Not Configured"}
-                {phone}
-                {_config["Candidate:Email"] ?? "Email Not Configured"}
-                {location}
-
-                {today}
-                --------------------------------
-
-                Then begin the letter (no extra headings).
-
-                The letter MUST be grounded in the candidate's real selected experience below.
-                Do NOT generalize. Reference the work naturally (no bullet lists).
-
-                ROLE:
-                {job.Title}
-
-                COMPANY:
-                {job.Company}
-
-                JOB DESCRIPTION:
-                {job.Description}
-
-                CANDIDATE PROFESSIONAL SUMMARY:
-                {resume.ProfessionalSummary}
-
-                CORE SKILLS IDENTIFIED FOR THIS ROLE:
-                {skills}
-
-                RELEVANT EXPERIENCE SELECTED FOR THIS APPLICATION:
-                {experiences}
-
-                Instructions:
-                - Connect past systems to this company's needs.
-                - Show engineering ownership and delivery mindset.
-                - Emphasize architecture, modernization, scalability, or cloud when relevant.
-                - Use specific experience context, but do NOT restate bullets.
-                - Avoid buzzwords and enthusiasm language.
-                - Sound like a senior engineer writing directly to a hiring manager.
-                - 220–300 words max.
-                - Use natural business prose (no lists).
-                - If the job is in the USA, naturally mention that the candidate is a Canadian citizen and can apply for a TN Visa to work in the United States. Otherwise, if it's anywhere in Canada, Brazil, Singapore or any other location it MUST not be added to the cover letter.
-                - If the role is not in Brazil, naturally mention that the candidate is willing to relocate.
-
-                Do NOT invent experience.
-                Do NOT list every technology.
-                Do NOT summarize the resume.
-                Focus on relevance and impact.
-                Always add "Sincerely, {_config["Candidate:FullName"] ?? "Name Not Configured"}" at the end.
-
-                Return ONLY the finished letter.
-                """;
+        return _promptService.LoadUserPrompt("CoverLetter", placeholders);
     }
 }

@@ -73,10 +73,10 @@ Open `JobResearchAgent/appsettings.json` and update the following sections:
 #### Job Search Criteria
 ```json
 "AgentPolicy": {
-  "Countries": ["Country 1", "Country 2"],
+  "CountriesTargeted": ["Country 1", "Country 2"],
   "Keywords": ["Skill 1", "Job Title 1", "Technology 1"],
   "Levels": ["Mid", "Senior", "Lead"],
-  "MaxAgeHours": 48,
+  "SearchJobsInTheLast": 48,
   "RemoteOnly": false,
   "AllowHybrid": true
 }

@@ -33,13 +33,9 @@ public class ResearchAgent
             _logger.LogInformation($"Querying source: {source.GetType().Name}");
 
             var jobs = await source.SearchAsync(query);
-            
             _logger.LogInformation($"Source {source.GetType().Name} returned {jobs.Count()} jobs");
 
             var filtered = ApplyHardFilters(jobs);
-            
-            _logger.LogInformation($"After filtering: {filtered.Count()} jobs from {source.GetType().Name}");
-
             allJobs.AddRange(filtered);
         }
 
@@ -118,9 +114,7 @@ public class ResearchAgent
     private List<JobPosting> ApplyHardFilters(IEnumerable<JobPosting> jobs)
     {
         var jobList = jobs.ToList();
-        
-        _logger.LogInformation($"===== DEBUGGING: Received {jobList.Count()} total jobs before filtering =====");
-        
+
         // FOR DEBUGGING: Return ALL jobs without filtering
         _logger.LogInformation($"===== RETURNING ALL {jobList.Count()} JOBS WITHOUT FILTERING =====");
         return jobList;

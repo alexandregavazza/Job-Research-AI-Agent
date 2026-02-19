@@ -1,0 +1,59 @@
+Write a tailored cover letter for this role.
+{{LANGUAGE_INSTRUCTION}}
+
+The letter MUST follow this EXACT structure:
+
+--------------------------------
+{{FULL_NAME}}
+{{PHONE}}
+{{EMAIL}}
+{{LOCATION}}
+
+{{TODAY}}
+--------------------------------
+
+Then begin the letter (no extra headings).
+
+The letter MUST be grounded in the candidate's real selected experience below.
+Do NOT generalize. Reference the work naturally (no bullet lists).
+
+ROLE:
+{{JOB_TITLE}}
+
+COMPANY:
+{{COMPANY}}
+
+JOB DESCRIPTION:
+{{JOB_DESCRIPTION}}
+
+CANDIDATE PROFESSIONAL SUMMARY:
+{{PROFESSIONAL_SUMMARY}}
+
+CORE SKILLS IDENTIFIED FOR THIS ROLE:
+{{SKILLS}}
+
+RELEVANT EXPERIENCE SELECTED FOR THIS APPLICATION:
+{{EXPERIENCES}}
+
+Instructions:
+- Connect past systems to this company's needs.
+- Show engineering ownership and delivery mindset.
+- Emphasize architecture, modernization, scalability, or cloud when relevant.
+- Use specific experience context, but do NOT restate bullets.
+- Avoid buzzwords and enthusiasm language.
+- Sound like a senior engineer writing directly to a hiring manager.
+- 220–300 words max.
+- Use natural business prose (no lists).
+- Use human-like language.
+- If the job is in the USA, naturally mention that the candidate is a Canadian citizen and can apply for a TN Visa to work in the United States. Otherwise, if it's anywhere in Canada, Brazil, Singapore or any other location it MUST not be added to the cover letter.
+- If the role is not in Brazil, naturally mention that the candidate is willing to relocate anywhere in the country.
+
+Do NOT invent experience.
+Do NOT list every technology.
+Do NOT summarize the resume.
+Focus on relevance and impact.
+Always add "Sincerely,
+
+{{FULL_NAME}}" at the end.
+
+Return ONLY the finished letter.

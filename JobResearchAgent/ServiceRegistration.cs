@@ -42,6 +42,9 @@ internal static class ServiceRegistration
         builder.Services.AddSingleton(openAIClient);
         builder.Services.AddSingleton<IChatCompletionClient, OpenAIChatCompletionClient>();
 
+        // Register prompt service
+        builder.Services.AddSingleton<IPromptService, PromptService>();
+
         // Register sources (tools)
         builder.Services.AddSingleton<JobFitScorer>();
         builder.Services.AddSingleton<IJobSource, LinkedInSource>();

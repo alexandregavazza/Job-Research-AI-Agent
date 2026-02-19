@@ -7,10 +7,12 @@ namespace JobResearchAgent.Services;
 public class ResumeCustomizer
 {
     private readonly IChatCompletionClient _chat;
+    private readonly IPromptService _promptService;
 
-    public ResumeCustomizer(IChatCompletionClient chat)
+    public ResumeCustomizer(IChatCompletionClient chat, IPromptService promptService)
     {
         _chat = chat ?? throw new ArgumentNullException(nameof(chat));
+        _promptService = promptService ?? throw new ArgumentNullException(nameof(promptService));
     }
 
     public async Task<TailoredResume> CustomizeAsync(
@@ -18,14 +20,15 @@ public class ResumeCustomizer
         string jobTitle,
         string jobDescription)
     {
-        var prompt = BuildPrompt(baseResume, jobTitle, jobDescription);
+        var systemPrompt = _promptService.LoadSystemPrompt("ResumeCustomizer");
+        var userPrompt = BuildPrompt(baseResume, jobTitle, jobDescription);
 
         var content = await _chat.CompleteAsync(
-            "You are an expert technical recruiter rewriting resumes to maximize interview chances.",
-            prompt,
+            systemPrompt,
+            userPrompt,
             new ChatCompletionOptions
             {
-                Temperature = 0.3f,
+                Temperature = 0.1f,
                 TopP = 1.0f,
                 MaxOutputTokenCount = 1200
             });
@@ -44,57 +47,15 @@ public class ResumeCustomizer
             ? "Write the resume in Portuguese."
             : "Write the resume in English.";
 
-        return $@"
-Rewrite the candidate's resume so it is highly targeted to THIS specific job.
+        var placeholders = new Dictionary<string, string>
+        {
+            { "LANGUAGE_INSTRUCTION", languageInstruction },
+            { "RESUME", resume },
+            { "JOB_TITLE", title },
+            { "JOB_DESCRIPTION", description }
+        };
 
-Rules:
-- Do NOT invent experience.
-- Do NOT add technologies not present in the original resume.
-- You may rephrase to match terminology used in the job description.
-- Prioritize the most relevant experience.
-- De-emphasize unrelated work.
-- Keep everything truthful.
-- Focus on achievements and impact.
-- Make the candidate sound like a strong fit for THIS role.
-- Select ALL relevant experiences (5–8 typical).
-- Do not artificially limit the list.
-- Keep each concise and achievement-focused.
-- Use bullet points for readability.
-- Add the name of the company for each experience and the period that I worked in the company.
-- Do not summarize, rewrite strategically like a recruiter would.
-- Use human language, not robotic or generic phrasing.
-- Add my name, phone number, LinkedIn profile, my personal website, and email at the top of the resume.
-- Avoid creating more than 5 pages of content.
-- {languageInstruction}
-
-You are not summarizing.
-You are rewriting strategically like a recruiter would.
-
-Return ONLY valid JSON in this format:
-
-{{
-  ""ProfessionalSummary"": ""..."",
-  ""KeySkills"": [""..."", ""...""],
-  ""Experience"": [
-    {{
-      ""Role"": ""..."",
-      ""Company"": ""..."",
-      ""StartDate"": ""..."",
-      ""EndDate"": ""..."",
-      ""Highlights"": [""..."", ""...""]
-    }}
-  ]
-}}
-
-Candidate Resume:
-{resume}
-
-Target Job Title:
-{title}
-
-Target Job Description:
-{description}
-""";
+        return _promptService.LoadUserPrompt("ResumeCustomizer", placeholders);
     }
 
     private string CleanJson(string raw)

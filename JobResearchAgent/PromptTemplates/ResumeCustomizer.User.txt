@@ -1,0 +1,52 @@
+Rewrite the candidate's resume so it is highly targeted to THIS specific job.
+
+CRITICAL CONSTRAINTS (MUST FOLLOW):
+- Do NOT invent experience, skills, or technologies.
+- Do NOT add technologies not present in the original resume.
+- Do NOT add skills that are not already mentioned in the candidate's resume.
+- ONLY use information that already exists in the provided resume.
+- Keep everything 100% truthful and verifiable.
+- For KeySkills section: ONLY extract skills/technologies explicitly mentioned in the candidate's resume.
+
+What you CAN do:
+- Reorganize and reorder content to emphasize relevant experience.
+- Rephrase existing experience to highlight achievements and impact.
+- Use stronger action verbs while keeping the same meaning.
+- De-emphasize or omit less relevant work.
+- Make existing experience sound more compelling.
+- Prioritize the most relevant experience for THIS role.
+- Select ALL relevant experiences (5–8 typical).
+- Keep each concise and achievement-focused.
+- Use bullet points for readability.
+- Add the name of the company for each experience and the period that I worked in the company.
+- Use human language, not robotic or generic phrasing.
+- Add my name, phone number, LinkedIn profile, my personal website, and email at the top of the resume.
+- Avoid creating more than 5 pages of content.
+- {{LANGUAGE_INSTRUCTION}}
+
+You are reorganizing and rephrasing EXISTING information strategically, not creating new content.
+
+Return ONLY valid JSON in this format:
+
+{
+  "ProfessionalSummary": "...",
+  "KeySkills": ["...", "..."],
+  "Experience": [
+    {
+      "Role": "...",
+      "Company": "...",
+      "StartDate": "...",
+      "EndDate": "...",
+      "Highlights": ["...", "..."]
+    }
+  ]
+}
+
+Candidate Resume:
+{{RESUME}}
+
+Target Job Title:
+{{JOB_TITLE}}
+
+Target Job Description:
+{{JOB_DESCRIPTION}}

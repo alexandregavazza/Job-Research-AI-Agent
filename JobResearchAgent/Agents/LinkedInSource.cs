@@ -31,7 +31,7 @@ public class LinkedInSource : IJobSource
 
         var query = BuildQuery();
         
-        foreach (var country in _policy.Countries)
+        foreach (var country in _policy.CountriesTargeted)
         {
             try
             {
@@ -86,7 +86,7 @@ public class LinkedInSource : IJobSource
 
                         // Open job details page (needed for description)
                         var detailPage = await context.NewPageAsync();
-                        _logger.LogInformation("Opening LinkedIn detail page: {externalId}", externalId);
+                        //_logger.LogInformation("Opening LinkedIn detail page: {externalId}", externalId);
 
                         var response = await detailPage.GotoAsync(jobUrl, new() { Timeout = 120000 });
                         _logger.LogInformation("Detail page response: {Status} {externalId}", response?.Status, externalId);
@@ -191,7 +191,7 @@ public class LinkedInSource : IJobSource
         var encodedQuery = Uri.EscapeDataString(query);
 
         // LinkedIn uses seconds for freshness filter
-        var seconds = _policy.MaxAgeHours * 3600;
+        var seconds = _policy.SearchJobsInTheLast * 3600;
 
         string result = $"https://www.linkedin.com/jobs/search/" +
                $"?keywords={encodedQuery}" +
