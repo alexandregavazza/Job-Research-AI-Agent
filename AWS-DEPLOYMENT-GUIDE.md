@@ -441,8 +441,9 @@ aws ec2 authorize-security-group-ingress --group-id sg-057ec7832807d06ea --proto
 
 ### 40. Create RDS PostgreSQL instance
 ```powershell
-aws rds create-db-instance --db-instance-identifier job-research-agent-db --db-instance-class db.t3.micro --engine postgres --engine-version 16.12 --master-username postgres --master-user-password "YOUR_MASTER_PASSWORD" --allocated-storage 20 --vpc-security-group-ids sg-057ec7832807d06ea --db-name jobsdb --backup-retention-period 7 --region sa-east-1 --publicly-accessible --no-multi-az
+aws rds create-db-instance --db-instance-identifier job-research-agent-db --db-instance-class db.t3.micro --engine postgres --engine-version 16.12 --master-username postgres --master-user-password "YOUR_MASTER_PASSWORD" --allocated-storage 20 --vpc-security-group-ids sg-057ec7832807d06ea --db-name jobsdb --backup-retention-period 7 --region sa-east-1 --no-multi-az
 ```
+Note: Keep the database private inside the VPC. Avoid public access unless you have a specific, locked-down need.
 
 ### 41. Wait for RDS to become available
 Check status:
@@ -521,7 +522,7 @@ aws events put-targets --rule job-research-agent-evening --targets file://infra/
 
 ### 48. Configure application settings securely
 
-**For Production (appsettings.json - tracked in git):**
+**For Production (appsettings.json - NOT tracked in git):**
 Use placeholder values for sensitive data:
 ```json
 "ConnectionStrings": {

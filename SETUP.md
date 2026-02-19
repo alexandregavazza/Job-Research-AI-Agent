@@ -132,6 +132,7 @@ pwsh playwright.ps1 install
 - Keep `appsettings.json` private (it's in .gitignore)
 - Use environment variables for API keys
 - Use strong database passwords
+- Rotate any default or weak local credentials (avoid `postgres/postgres`)
 - Review .gitignore before committing
 
 ### ❌ DON'T:

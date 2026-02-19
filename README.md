@@ -98,7 +98,7 @@ Job Research AI Agent is an automated end-to-end pipeline for discovering, colle
 - **OPENAI_API_KEY**: Your OpenAI API key (required)
 
 ### Security Best Practices
-- **appsettings.json** (tracked in git): Use placeholder values for sensitive data (e.g., `Password=YOUR_PASSWORD_HERE`)
+- **appsettings.json** (NOT tracked in git): Use placeholder values for sensitive data (e.g., `Password=YOUR_PASSWORD_HERE`)
 - **appsettings.Development.json** (in `.gitignore`): Contains actual credentials for local development - NEVER commit to git
 - **Production**: Credentials injected via AWS Secrets Manager or environment variables
 - **Resume files** in `Profiles/` folder: Already excluded from git via `.gitignore` to protect your personal information
@@ -114,7 +114,7 @@ Job Research AI Agent is an automated end-to-end pipeline for discovering, colle
 ```json
 {
   "ConnectionStrings": {
-    "Default": "Host=localhost;Database=jobresearch;Username=user;Password=pass"
+    "Default": "Host=localhost;Database=jobresearch;Username=YOUR_USERNAME;Password=YOUR_STRONG_PASSWORD"
   },
   "AI": {
     "Model": "gpt-4",

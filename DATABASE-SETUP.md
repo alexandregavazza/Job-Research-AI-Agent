@@ -114,7 +114,7 @@ You should see:
 The connection string in `appsettings.json`:
 ```json
 "ConnectionStrings": {
-  "Default": "Host=localhost;Port=5432;Database=jobsdb;Username=postgres;Password=postgres"
+    "Default": "Host=localhost;Port=5432;Database=jobsdb;Username=YOUR_USERNAME;Password=YOUR_STRONG_PASSWORD"
 }
 ```
 
@@ -249,7 +249,7 @@ DELETE FROM jobs WHERE external_job_id = 'test-123';
 
 ### Local Development
 ```
-Host=localhost;Port=5432;Database=jobsdb;Username=postgres;Password=postgres
+Host=localhost;Port=5432;Database=jobsdb;Username=YOUR_USERNAME;Password=YOUR_STRONG_PASSWORD
 ```
 
 ### AWS RDS (stored in Secrets Manager)
