@@ -30,6 +30,9 @@ public class PdfResumeExporter
 
     public string Export(JobPosting job, TailoredResume resume)
     {
+        var isPortuguese = LanguageDetector.IsPortuguese(job.Description ?? resume.ProfessionalSummary ?? "");
+        var earlyCareerLabel = EarlyCareerTextSelector.SelectLabel(_config, isPortuguese);
+        var earlyCareerDescription = EarlyCareerTextSelector.SelectDescription(_config, isPortuguese);
         var todayFolder = Path.Combine(_basePath, DateTime.UtcNow.ToString("yyyy-MM-dd"));
         Directory.CreateDirectory(todayFolder);
 
@@ -99,9 +102,9 @@ public class PdfResumeExporter
                     // Add early career section if configured
                     col.Item().Column(expCol =>
                     {
-                        expCol.Item().Text($"{_config["Candidate:Career:EarlyCareerLabel"] ?? "Early Career"} ({_config["Candidate:Career:StartYear"] ?? "N/A"} - {lastYear})")
+                        expCol.Item().Text($"{earlyCareerLabel} ({_config["Candidate:Career:StartYear"] ?? "N/A"} - {lastYear})")
                             .Bold();
-                        expCol.Item().Text($"• {_config["Candidate:Career:Description"] ?? "Early career description not configured."}");
+                        expCol.Item().Text($"• {earlyCareerDescription}");
                     });
 
                     // EDUCATION SECTION

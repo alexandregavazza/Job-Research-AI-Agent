@@ -86,7 +86,9 @@ public class CoverLetterService : ICoverLetterService
         // Try to infer country from job metadata
         var location = job.Location?.ToLowerInvariant() ?? "";
 
-        if (location.Contains("brazil"))
+        if (location.Contains("brazil") ||
+            location.Contains("são paulo") ||
+            location.Contains("belo horizonte"))
             return _config["Candidate:LocationBR"]
                 ?? _config["Candidate:Location"]
                 ?? "Location Not Configured";

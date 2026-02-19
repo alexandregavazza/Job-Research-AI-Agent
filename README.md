@@ -92,7 +92,7 @@ Job Research AI Agent is an automated end-to-end pipeline for discovering, colle
 - **AI:Model**: OpenAI model for LLM operations (e.g., "gpt-4")
 - **AI:EmbeddingModel**: OpenAI embedding model (e.g., "text-embedding-ada-002")
 - **Output:BasePath**: Base directory for generated PDF documents
-- **Candidate:*** : Your personal information (name, email, phone, LinkedIn, location, education, personal website). Optional fields used by exporters and cover letters include `Career:*`, and regional overrides like `PhoneBR`, `PhoneUS`, `PhoneCA`, `LocationBR`, `LocationUS`, `LocationCA`.
+- **Candidate:*** : Your personal information (name, email, phone, LinkedIn, location, education, personal website). Optional fields used by exporters and cover letters include `Career:*` (use `EarlyCareerLabelEn/Pt` and `DescriptionEn/Pt` for bilingual output), and regional overrides like `PhoneBR`, `PhoneUS`, `PhoneCA`, `LocationBR`, `LocationUS`, `LocationCA`.
 
 ### Environment Variables
 - **OPENAI_API_KEY**: Your OpenAI API key (required)

@@ -64,8 +64,10 @@ Open `JobResearchAgent/appsettings.json` and update the following sections:
   ],
   "Career": {
     "StartYear": "Your Career Start Date",
-    "EarlyCareerLabel": "Your Early Career Title",
-    "Description": "Brief description of your early career"
+    "EarlyCareerLabelEn": "Your Early Career Title (EN)",
+    "EarlyCareerLabelPt": "Seu titulo de inicio de carreira (PT)",
+    "DescriptionEn": "Brief description of your early career (EN)",
+    "DescriptionPt": "Descricao breve do inicio de carreira (PT)"
   }
 }
 ```
