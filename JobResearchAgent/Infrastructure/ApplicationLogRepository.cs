@@ -55,15 +55,22 @@ public class ApplicationLogRepository : IApplicationLogRepository
             await conn.ExecuteAsync(new CommandDefinition(sql, log, cancellationToken: ct));
     }
 
-    public async Task<bool> WasJobInsertedWithinDaysAsync(string externalJobId, int days, CancellationToken ct)
+    public async Task<bool> WasJobInsertedWithinDaysAsync(string externalJobId, string jobTitle, string company, string location, int days, CancellationToken ct)
     {
-        const string sql = "SELECT created_at FROM job_application_logs WHERE external_job_id = @id LIMIT 1;";
+        const string sql = """
+            SELECT created_at 
+            FROM job_application_logs 
+            WHERE (job_title = @Title AND company = @Company AND location = @Location) 
+               OR external_job_id = @ExternalJobId
+            ORDER BY created_at DESC
+            LIMIT 1;
+            """;
 
         await using var conn = new NpgsqlConnection(_connection);
         await conn.OpenAsync(ct);
 
         var createdAt = await conn.ExecuteScalarAsync<DateTime?>(
-            new CommandDefinition(sql, new { id = externalJobId }, cancellationToken: ct));
+            new CommandDefinition(sql, new { ExternalJobId = externalJobId, Title = jobTitle, Company = company, Location = location }, cancellationToken: ct));
 
         if (createdAt == null)
         {

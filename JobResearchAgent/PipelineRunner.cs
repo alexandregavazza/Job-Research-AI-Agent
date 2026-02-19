@@ -98,7 +98,7 @@ public class PipelineRunner
                 qualifiedJobs.Add(job);
 
                 // Testing only: restrict automation to a single company if configured.
-                if (!string.IsNullOrWhiteSpace(_applicationPolicy.AllowedCompany)
+                /*if (!string.IsNullOrWhiteSpace(_applicationPolicy.AllowedCompany)
                     && !job.Company.Contains(_applicationPolicy.AllowedCompany, StringComparison.OrdinalIgnoreCase))
                 {
                     _logger.LogInformation(
@@ -106,16 +106,19 @@ public class PipelineRunner
                         job.ExternalJobId,
                         _applicationPolicy.AllowedCompany);
                     continue;
-                }
+                }*/
 
                 if (!string.IsNullOrWhiteSpace(job.ExternalJobId)
                     && await _applicationLogRepository.WasJobInsertedWithinDaysAsync(
                         job.ExternalJobId,
+                        job.Title,
+                        job.Company,
+                        job.Location,
                         15,
                         stoppingToken))
                 {
                     _logger.LogInformation(
-                        "Skipping resume and cover letter for recent job {JobId}",
+                        "Skipping resume and cover letter for recent job {JobId} (matched by external_job_id or title+company+location)",
                         job.ExternalJobId);
                     continue;
                 }
