@@ -143,6 +143,7 @@ pwsh playwright.ps1 install
 - Hardcode API keys in code
 - Commit PDF files with personal information
 - Commit resume files with your actual information
+- Commit database dumps or export files (e.g., `export_data.sql`, `export_data.dump`)
 
 ## Verifying Your Setup
 

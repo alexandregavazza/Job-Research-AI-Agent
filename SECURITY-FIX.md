@@ -84,8 +84,8 @@ git push origin --force --all
 
 ```powershell
 # Verify no sensitive data in main branch
-git log main -S "alexandre.gavazza@gmail.com" --oneline  # Should be empty or only in security commits
-git log main -S "+55 (12) 9 9245-7070" --oneline          # Should be empty
+git log main -S "example.user@example.com" --oneline     # Should be empty or only in security commits
+git log main -S "+1 555-0100" --oneline                   # Should be empty
 git log main -S "Password=postgres" --oneline             # Should be empty
 
 # Verify only example files are tracked
@@ -251,7 +251,7 @@ git check-ignore -v JobResearchAgent/appsettings.json
 # Should output: .gitignore:XX:JobResearchAgent/appsettings.json
 
 # Search history for sensitive data (example: email)
-git log -S "alexandre.gavazza@gmail.com" --all
+git log -S "example.user@example.com" --all
 # Should show no results after cleaning
 ```
 

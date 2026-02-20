@@ -102,6 +102,7 @@ Job Research AI Agent is an automated end-to-end pipeline for discovering, colle
 - **appsettings.Development.json** (in `.gitignore`): Contains actual credentials for local development - NEVER commit to git
 - **Production**: Credentials injected via AWS Secrets Manager or environment variables
 - **Resume files** in `Profiles/` folder: Already excluded from git via `.gitignore` to protect your personal information
+- **Documentation**: Use placeholders for emails, phone numbers, and other identifiers; avoid real personal data in docs and examples
 
 ### Optional Configuration
 - **AgentPolicy**: Job search criteria (countries targeted, keywords, seniority levels, remote/hybrid filter, max age)
