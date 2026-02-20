@@ -1,4 +1,6 @@
 using JobResearchAgent.Models;
+using JobResearchAgent.Services;
+using JobResearchAgent.Services.Prompting;
 using OpenAI.Chat;
 
 namespace JobResearchAgent.Services.CoverLetter;
@@ -9,8 +11,14 @@ public class CoverLetterService : ICoverLetterService
     private readonly ILogger<CoverLetterService> _logger;
     private readonly IConfiguration _config;
     private readonly IPromptService _promptService;
+    private readonly LanguageDetector _languageDetector;
 
-    public CoverLetterService(IChatCompletionClient chat, IConfiguration config, ILogger<CoverLetterService> logger, IPromptService promptService)
+    public CoverLetterService(
+        IChatCompletionClient chat,
+        IConfiguration config,
+        ILogger<CoverLetterService> logger,
+        IPromptService promptService,
+        LanguageDetector languageDetector)
     {
         if (chat == null)
             throw new ArgumentNullException(nameof(chat));
@@ -20,11 +28,14 @@ public class CoverLetterService : ICoverLetterService
             throw new ArgumentNullException(nameof(logger));
         if (promptService == null)
             throw new ArgumentNullException(nameof(promptService));
+        if (languageDetector == null)
+            throw new ArgumentNullException(nameof(languageDetector));
 
         _chat = chat;
         _config = config;
         _logger = logger;
         _promptService = promptService;
+        _languageDetector = languageDetector;
     }
 
     public async Task<GeneratedCoverLetter> GenerateAsync(
@@ -134,7 +145,7 @@ public class CoverLetterService : ICoverLetterService
                 {string.Join("\n", e.Highlights.Select(a => "- " + a))}
                 """));
 
-        var isPortuguese = LanguageDetector.IsPortuguese(job.Description ?? "");
+        var isPortuguese = _languageDetector.IsPortuguese(job.Description ?? "");
         var languageInstruction = isPortuguese
             ? "IMPORTANT: Write the entire cover letter in Portuguese (PT-BR), as the job description is in Portuguese."
             : "";

@@ -1,4 +1,5 @@
 ﻿using JobResearchAgent.Services;
+using Microsoft.Extensions.Options;
 
 namespace JobResearchAgent.Tests;
 
@@ -20,8 +21,29 @@ public class LanguageDetectorTests
     [InlineData("A empresa busca profissionais com experiência e responsabilidades claras no cargo.", true)]
     public void IsPortuguese_ReturnsExpectedResult(string? input, bool expected)
     {
-        var result = LanguageDetector.IsPortuguese(input);
+        var detector = BuildLanguageDetector();
+        var result = detector.IsPortuguese(input);
 
         Assert.Equal(expected, result);
+    }
+
+    private static LanguageDetector BuildLanguageDetector()
+    {
+        var options = new LanguageDetectionOptions
+        {
+            PortugueseIndicators = new List<string>
+            {
+                "experiência", "responsabilidades", "requisitos", "empresa",
+                "trabalho", "habilidades", "cargo", "qualificações", "descrição",
+                "competências", "departamento", "português", "brasil", "portugal",
+                "educação", "formação", "certificações", "certificados", "linguagem",
+                "deve ter", "é necessário", "buscamos", "procuramos", "estamos",
+                "processo seletivo", "candidatos", "vaga", "salário", "benefícios",
+                "você", "será", "através", "conhecimento"
+            },
+            MinimumIndicatorMatches = 3
+        };
+
+        return new LanguageDetector(Options.Create(options));
     }
 }

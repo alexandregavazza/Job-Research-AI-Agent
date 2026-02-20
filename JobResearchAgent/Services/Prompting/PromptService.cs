@@ -1,10 +1,4 @@
-namespace JobResearchAgent.Services;
-
-public interface IPromptService
-{
-    string LoadSystemPrompt(string templateName);
-    string LoadUserPrompt(string templateName, Dictionary<string, string> placeholders);
-}
+namespace JobResearchAgent.Services.Prompting;
 
 public class PromptService : IPromptService
 {

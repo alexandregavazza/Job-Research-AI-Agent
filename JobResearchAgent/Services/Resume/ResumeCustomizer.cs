@@ -1,18 +1,25 @@
 using System.Text.Json;
 using JobResearchAgent.Models;
+using JobResearchAgent.Services;
+using JobResearchAgent.Services.Prompting;
 using OpenAI.Chat;
 
-namespace JobResearchAgent.Services;
+namespace JobResearchAgent.Services.Resume;
 
-public class ResumeCustomizer
+public class ResumeCustomizer : IResumeCustomizer
 {
     private readonly IChatCompletionClient _chat;
+    private readonly LanguageDetector _languageDetector;
     private readonly IPromptService _promptService;
 
-    public ResumeCustomizer(IChatCompletionClient chat, IPromptService promptService)
+    public ResumeCustomizer(
+        IChatCompletionClient chat,
+        IPromptService promptService,
+        LanguageDetector languageDetector)
     {
         _chat = chat ?? throw new ArgumentNullException(nameof(chat));
         _promptService = promptService ?? throw new ArgumentNullException(nameof(promptService));
+        _languageDetector = languageDetector ?? throw new ArgumentNullException(nameof(languageDetector));
     }
 
     public async Task<TailoredResume> CustomizeAsync(
@@ -42,7 +49,7 @@ public class ResumeCustomizer
     // ✅ STEP 4 — THIS is the prompt location
     private string BuildPrompt(string resume, string title, string description)
     {
-        var isPortuguese = LanguageDetector.IsPortuguese(description);
+        var isPortuguese = _languageDetector.IsPortuguese(description);
         var languageInstruction = isPortuguese 
             ? "Write the resume in Portuguese."
             : "Write the resume in English.";

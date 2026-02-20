@@ -1,4 +1,5 @@
 using JobResearchAgent.Services;
+using JobResearchAgent.Services.Prompting;
 using Moq;
 using OpenAI.Chat;
 
@@ -18,7 +19,13 @@ public class JobFitScorerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(responseJson);
 
-        var scorer = new JobFitScorer(chat.Object);
+        var promptService = new Mock<IPromptService>();
+        promptService.Setup(p => p.LoadSystemPrompt("JobFitScorer"))
+            .Returns("system");
+        promptService.Setup(p => p.LoadUserPrompt("JobFitScorer", It.IsAny<Dictionary<string, string>>()))
+            .Returns("user");
+
+        var scorer = new JobFitScorer(chat.Object, promptService.Object);
 
         var (score, reason) = await scorer.ScoreAsync("resume", "title", "description");
 
@@ -37,7 +44,13 @@ public class JobFitScorerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync("No JSON here");
 
-        var scorer = new JobFitScorer(chat.Object);
+        var promptService = new Mock<IPromptService>();
+        promptService.Setup(p => p.LoadSystemPrompt("JobFitScorer"))
+            .Returns("system");
+        promptService.Setup(p => p.LoadUserPrompt("JobFitScorer", It.IsAny<Dictionary<string, string>>()))
+            .Returns("user");
+
+        var scorer = new JobFitScorer(chat.Object, promptService.Object);
 
         await Assert.ThrowsAsync<Exception>(() =>
             scorer.ScoreAsync("resume", "title", "description"));

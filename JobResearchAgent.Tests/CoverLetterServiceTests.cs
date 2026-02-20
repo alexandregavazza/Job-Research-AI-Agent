@@ -1,8 +1,10 @@
 using JobResearchAgent.Models;
 using JobResearchAgent.Services;
 using JobResearchAgent.Services.CoverLetter;
+using JobResearchAgent.Services.Prompting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 using OpenAI.Chat;
 
@@ -30,7 +32,12 @@ public class CoverLetterServiceTests
             .Returns<string, Dictionary<string, string>>((_, placeholders) =>
                 $"Prompt: {placeholders.GetValueOrDefault("LANGUAGE_INSTRUCTION", string.Empty)}");
 
-        var service = new CoverLetterService(chat.Object, config, logger, promptService.Object);
+        var service = new CoverLetterService(
+            chat.Object,
+            config,
+            logger,
+            promptService.Object,
+            BuildLanguageDetector());
 
         var job = CreateJob("Remote", "English description", "job-1");
         var resume = CreateResume();
@@ -68,7 +75,12 @@ public class CoverLetterServiceTests
             .Returns<string, Dictionary<string, string>>((_, placeholders) =>
                 $"Prompt: {placeholders.GetValueOrDefault("LANGUAGE_INSTRUCTION", string.Empty)}");
 
-        var service = new CoverLetterService(chat.Object, config, logger, promptService.Object);
+        var service = new CoverLetterService(
+            chat.Object,
+            config,
+            logger,
+            promptService.Object,
+            BuildLanguageDetector());
 
         var job = CreateJob("Brazil", "Experiência sólida com responsabilidades e requisitos do cargo.", "job-2");
         var resume = CreateResume();
@@ -93,6 +105,26 @@ public class CoverLetterServiceTests
         return new ConfigurationBuilder()
             .AddInMemoryCollection(data)
             .Build();
+    }
+
+    private static LanguageDetector BuildLanguageDetector()
+    {
+        var options = new LanguageDetectionOptions
+        {
+            PortugueseIndicators = new List<string>
+            {
+                "experiência", "responsabilidades", "requisitos", "empresa",
+                "trabalho", "habilidades", "cargo", "qualificações", "descrição",
+                "competências", "departamento", "português", "brasil", "portugal",
+                "educação", "formação", "certificações", "certificados", "linguagem",
+                "deve ter", "é necessário", "buscamos", "procuramos", "estamos",
+                "processo seletivo", "candidatos", "vaga", "salário", "benefícios",
+                "você", "será", "através", "conhecimento"
+            },
+            MinimumIndicatorMatches = 3
+        };
+
+        return new LanguageDetector(Options.Create(options));
     }
 
     private static JobPosting CreateJob(string location, string description, string jobId)

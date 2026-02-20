@@ -1,37 +1,42 @@
+using Microsoft.Extensions.Options;
+
 namespace JobResearchAgent.Services;
 
 /// <summary>
 /// Helper class to detect the language of a given text.
 /// Currently supports Portuguese detection.
 /// </summary>
-public static class LanguageDetector
+public class LanguageDetector
 {
+    private readonly LanguageDetectionOptions _options;
+
+    public LanguageDetector(IOptions<LanguageDetectionOptions> options)
+    {
+        _options = options?.Value ?? new LanguageDetectionOptions();
+    }
+
     /// <summary>
     /// Determines if the provided text is in Portuguese.
     /// </summary>
     /// <param name="text">The text to analyze</param>
     /// <returns>True if the text is detected as Portuguese, false otherwise</returns>
-    public static bool IsPortuguese(string? text)
+    public bool IsPortuguese(string? text)
     {
         if (string.IsNullOrWhiteSpace(text))
             return false;
 
-        // Common Portuguese words and patterns
-        var portugueseIndicators = new[]
-        {
-            "experiência", "responsabilidades", "requisitos", "empresa",
-            "trabalho", "habilidades", "cargo", "qualificações", "descrição",
-            "competências", "departamento", "português", "brasil", "portugal",
-            "educação", "formação", "certificações", "certificados", "linguagem",
-            "deve ter", "é necessário", "buscamos", "procuramos", "estamos",
-            "processo seletivo", "candidatos", "vaga", "salário", "benefícios",
-            "você", "será", "através", "conhecimento"
-        };
+        if (_options.PortugueseIndicators.Count == 0)
+            return false;
 
-        var lowerText = text.ToLowerInvariant();
-        var matches = portugueseIndicators.Count(indicator => lowerText.Contains(indicator));
+        var matches = _options.PortugueseIndicators.Count(indicator =>
+            !string.IsNullOrWhiteSpace(indicator)
+            && text.Contains(indicator, StringComparison.OrdinalIgnoreCase));
 
-        // If we find at least 3 Portuguese indicators, consider it Portuguese
-        return matches >= 3;
+        var minimumMatches = _options.MinimumIndicatorMatches <= 0
+            ? 1
+            : _options.MinimumIndicatorMatches;
+
+        // If we find enough Portuguese indicators, consider it Portuguese
+        return matches >= minimumMatches;
     }
 }

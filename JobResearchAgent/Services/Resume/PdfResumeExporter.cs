@@ -3,9 +3,10 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using JobResearchAgent.Models;
+using JobResearchAgent.Services;
 using JobResearchAgent.Services.FileManipulator;
 
-namespace JobResearchAgent.Services;
+namespace JobResearchAgent.Services.Resume;
 
 /// <summary>
 /// PDF resume exporter following SOLID principles with dependency injection
@@ -16,11 +17,16 @@ public class PdfResumeExporter
     private readonly IConfiguration _config;
     private readonly string[] _education;
     private readonly IFileSanitizer _fileSanitizer;
+    private readonly LanguageDetector _languageDetector;
 
-    public PdfResumeExporter(IConfiguration config, IFileSanitizer fileSanitizer)
+    public PdfResumeExporter(
+        IConfiguration config,
+        IFileSanitizer fileSanitizer,
+        LanguageDetector languageDetector)
     {
         _config = config ?? throw new ArgumentNullException(nameof(config));
         _fileSanitizer = fileSanitizer ?? throw new ArgumentNullException(nameof(fileSanitizer));
+        _languageDetector = languageDetector ?? throw new ArgumentNullException(nameof(languageDetector));
         
         _basePath = config["Output:BasePath"]
             ?? throw new InvalidOperationException("Output:BasePath not configured.");
@@ -30,7 +36,7 @@ public class PdfResumeExporter
 
     public string Export(JobPosting job, TailoredResume resume)
     {
-        var isPortuguese = LanguageDetector.IsPortuguese(job.Description ?? resume.ProfessionalSummary ?? "");
+        var isPortuguese = _languageDetector.IsPortuguese(job.Description ?? resume.ProfessionalSummary ?? "");
         var earlyCareerLabel = EarlyCareerTextSelector.SelectLabel(_config, isPortuguese);
         var earlyCareerDescription = EarlyCareerTextSelector.SelectDescription(_config, isPortuguese);
         var phone = ResolvePhoneByLocation(job);

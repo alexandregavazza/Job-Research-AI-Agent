@@ -52,7 +52,7 @@ Job Research AI Agent is an automated end-to-end pipeline for discovering, colle
   - **EmbeddingService.cs**: Generates text embeddings using OpenAI (Semantic Kernel).
   - **JobFitScorer.cs**: Uses OpenAI LLM to deeply score job fit and provide reasoning.
   - **ResumeCustomizer.cs**: Uses OpenAI LLM to generate tailored resumes for specific jobs.
-  - **LanguageDetector.cs**: Detects Portuguese job descriptions to decide resume/cover letter language.
+  - **LanguageDetector.cs**: Detects Portuguese job descriptions using configurable indicators from appsettings.
   - **IChatCompletionClient.cs / OpenAIChatCompletionClient.cs**: Abstraction for chat completions to simplify testing and mocking.
   - **PdfResumeExporter.cs**: Exports tailored resumes to PDF using QuestPDF.
   - **CoverLetter/**:
@@ -110,6 +110,7 @@ Job Research AI Agent is an automated end-to-end pipeline for discovering, colle
 - **ApplicationPolicy**: Application automation settings (Enabled, RequireApproval, DelayBetweenApplicationsSeconds, AllowedCompany for testing)
 - **BrowserAutomation**: Browser settings for automation (Headless, SlowMo, Timeout, UserDataDir, Viewport)
 - **IndeedAutomation**: Indeed-specific automation selectors
+- **LanguageDetection**: Portuguese indicator list and minimum match count
 
 ### Example appsettings.json Structure
 ```json
@@ -120,6 +121,10 @@ Job Research AI Agent is an automated end-to-end pipeline for discovering, colle
   "AI": {
     "Model": "gpt-4",
     "EmbeddingModel": "text-embedding-ada-002"
+  },
+  "LanguageDetection": {
+    "PortugueseIndicators": ["experiencia", "requisitos", "empresa"],
+    "MinimumIndicatorMatches": 3
   },
   "Output": {
     "BasePath": "C:\\JobApplications"

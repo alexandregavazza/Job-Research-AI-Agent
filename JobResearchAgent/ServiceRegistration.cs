@@ -9,6 +9,8 @@ using JobResearchAgent.Models;
 using JobResearchAgent.Services;
 using JobResearchAgent.Services.CoverLetter;
 using JobResearchAgent.Services.FileManipulator;
+using JobResearchAgent.Services.Prompting;
+using JobResearchAgent.Services.Resume;
 using JobResearchAgent.Services.Storage;
 using OpenAI;
 
@@ -42,6 +44,10 @@ internal static class ServiceRegistration
         builder.Services.AddSingleton(openAIClient);
         builder.Services.AddSingleton<IChatCompletionClient, OpenAIChatCompletionClient>();
 
+        builder.Services.Configure<LanguageDetectionOptions>(
+            builder.Configuration.GetSection("LanguageDetection"));
+        builder.Services.AddSingleton<LanguageDetector>();
+
         // Register prompt service
         builder.Services.AddSingleton<IPromptService, PromptService>();
 
@@ -52,7 +58,7 @@ internal static class ServiceRegistration
         builder.Services.AddSingleton<ResearchAgent>();
         builder.Services.AddSingleton<EmbeddingService>();
         builder.Services.AddSingleton<MatchingAgent>();
-        builder.Services.AddSingleton<ResumeCustomizer>();
+        builder.Services.AddSingleton<IResumeCustomizer, ResumeCustomizer>();
         builder.Services.AddSingleton<PdfResumeExporter>();
         builder.Services.AddSingleton<PdfCoverLetterExporter>();
         builder.Services.AddSingleton<ICoverLetterService, CoverLetterService>();

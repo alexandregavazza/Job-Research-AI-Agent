@@ -1,15 +1,18 @@
-using OpenAI.Chat;
 using System.Text.Json;
+using JobResearchAgent.Services.Prompting;
+using OpenAI.Chat;
 
 namespace JobResearchAgent.Services;
 
 public class JobFitScorer
 {
     private readonly IChatCompletionClient _chat;
+    private readonly IPromptService _promptService;
 
-    public JobFitScorer(IChatCompletionClient chat)
+    public JobFitScorer(IChatCompletionClient chat, IPromptService promptService)
     {
         _chat = chat ?? throw new ArgumentNullException(nameof(chat));
+        _promptService = promptService ?? throw new ArgumentNullException(nameof(promptService));
     }
 
     public async Task<(double score, string reason)> ScoreAsync(
@@ -17,11 +20,19 @@ public class JobFitScorer
         string jobTitle,
         string jobDescription)
     {
-        var prompt = BuildPrompt(resume, jobTitle, jobDescription);
+        var systemPrompt = _promptService.LoadSystemPrompt("JobFitScorer");
+        var userPrompt = _promptService.LoadUserPrompt(
+            "JobFitScorer",
+            new Dictionary<string, string>
+            {
+                { "RESUME", resume },
+                { "JOB_TITLE", jobTitle },
+                { "JOB_DESCRIPTION", jobDescription }
+            });
 
         var content = await _chat.CompleteAsync(
-            "You are a senior software engineering recruiter.",
-            prompt,
+            systemPrompt,
+            userPrompt,
             new ChatCompletionOptions
             {
                 Temperature = 0.0f,
@@ -55,51 +66,6 @@ public class JobFitScorer
             throw new Exception($"No JSON object found in:\n{raw}");
 
         return raw.Substring(start, end - start + 1);
-    }
-
-    private string BuildPrompt(string resume, string title, string description)
-    {
-        return $@"
-            Evaluate this candidate against the job like a HUMAN hiring manager.
-
-            SCORING RULES (MANDATORY):
-
-            - Score MUST be an integer between 0 and 100.
-            - 0 = no match at all
-            - 50 = partial / transferable skills
-            - 70 = strong match, some gaps
-            - 85 = excellent match
-            - 100 = perfect match
-
-            DO NOT use a 1–10 scale.
-            DO NOT output decimals.
-            DO NOT explain scoring.
-            DO NOT output anything except the JSON.
-
-            If you output a value <= 10, you are WRONG.
-
-            Equivalent skills count:
-            - .NET = any modern backend (Java, Python, Node, Go, etc.)
-            - Angular = React/Vue acceptable
-            - AWS/Azure/GCP = ANY cloud
-            - SQL = any relational DB
-            - Microservices = distributed systems
-            - REST APIs = backend service experience
-
-            Evaluate like a human hiring manager, not a keyword matcher.
-
-            Return ONLY this JSON format:
-            {{ ""score"": 0-100, ""reason"": ""one short sentence"" }}
-
-            Resume:
-            {resume}
-
-            Job Title:
-            {title}
-
-            Job Description:
-            {description}
-            ";
     }
 
     private class JobFitResponse

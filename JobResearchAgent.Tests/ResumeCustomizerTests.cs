@@ -1,4 +1,7 @@
 using JobResearchAgent.Services;
+using JobResearchAgent.Services.Prompting;
+using JobResearchAgent.Services.Resume;
+using Microsoft.Extensions.Options;
 using Moq;
 using OpenAI.Chat;
 
@@ -25,7 +28,7 @@ public class ResumeCustomizerTests
             .Returns<string, Dictionary<string, string>>((_, placeholders) =>
                 $"Prompt: {placeholders.GetValueOrDefault("LANGUAGE_INSTRUCTION", string.Empty)}");
 
-        var service = new ResumeCustomizer(chat.Object, promptService.Object);
+        var service = new ResumeCustomizer(chat.Object, promptService.Object, BuildLanguageDetector());
 
         var result = await service.CustomizeAsync("base", "title", "description");
 
@@ -59,10 +62,30 @@ public class ResumeCustomizerTests
             .Returns<string, Dictionary<string, string>>((_, placeholders) =>
                 $"Prompt: {placeholders.GetValueOrDefault("LANGUAGE_INSTRUCTION", string.Empty)}");
 
-        var service = new ResumeCustomizer(chat.Object, promptService.Object);
+        var service = new ResumeCustomizer(chat.Object, promptService.Object, BuildLanguageDetector());
 
         await service.CustomizeAsync("base", "title", "Experiência sólida com responsabilidades e requisitos do cargo.");
 
         Assert.Contains("Write the resume in Portuguese.", capturedPrompt);
+    }
+
+    private static LanguageDetector BuildLanguageDetector()
+    {
+        var options = new LanguageDetectionOptions
+        {
+            PortugueseIndicators = new List<string>
+            {
+                "experiência", "responsabilidades", "requisitos", "empresa",
+                "trabalho", "habilidades", "cargo", "qualificações", "descrição",
+                "competências", "departamento", "português", "brasil", "portugal",
+                "educação", "formação", "certificações", "certificados", "linguagem",
+                "deve ter", "é necessário", "buscamos", "procuramos", "estamos",
+                "processo seletivo", "candidatos", "vaga", "salário", "benefícios",
+                "você", "será", "através", "conhecimento"
+            },
+            MinimumIndicatorMatches = 3
+        };
+
+        return new LanguageDetector(Options.Create(options));
     }
 }

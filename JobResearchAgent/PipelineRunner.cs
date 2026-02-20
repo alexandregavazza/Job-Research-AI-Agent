@@ -3,8 +3,8 @@ using JobResearchAgent.Application;
 using JobResearchAgent.Infrastructure;
 using JobResearchAgent.Matching;
 using JobResearchAgent.Models;
-using JobResearchAgent.Services;
 using JobResearchAgent.Services.CoverLetter;
+using JobResearchAgent.Services.Resume;
 using JobResearchAgent.Services.Storage;
 using Microsoft.Extensions.Options;
 
@@ -16,7 +16,7 @@ public class PipelineRunner
     private readonly ResearchAgent _agent;
     private readonly IJobRepository _repository;
     private readonly MatchingAgent _matchingAgent;
-    private readonly ResumeCustomizer _resumeCustomizer;
+    private readonly IResumeCustomizer _resumeCustomizer;
     private readonly ResumeProfile _resume;
     private readonly PdfResumeExporter _pdfResumeExporter;
     private readonly ICoverLetterService _coverLetterService;
@@ -32,7 +32,7 @@ public class PipelineRunner
         ResearchAgent agent,
         IJobRepository repository,
         MatchingAgent matchingAgent,
-        ResumeCustomizer resumeCustomizer,
+        IResumeCustomizer resumeCustomizer,
         PdfResumeExporter pdfResumeExporter,
         ICoverLetterService coverLetterService,
         PdfCoverLetterExporter coverLetterExporter,
