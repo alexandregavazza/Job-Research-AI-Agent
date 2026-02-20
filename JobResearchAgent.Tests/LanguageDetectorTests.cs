@@ -21,15 +21,48 @@ public class LanguageDetectorTests
     [InlineData("A empresa busca profissionais com experiência e responsabilidades claras no cargo.", true)]
     public void IsPortuguese_ReturnsExpectedResult(string? input, bool expected)
     {
-        var detector = BuildLanguageDetector();
+        var detector = BuildLanguageDetector(CreateDefaultOptions());
         var result = detector.IsPortuguese(input);
 
         Assert.Equal(expected, result);
     }
 
-    private static LanguageDetector BuildLanguageDetector()
+    [Fact]
+    public void IsPortuguese_ReturnsFalseWhenIndicatorsEmpty()
     {
         var options = new LanguageDetectionOptions
+        {
+            PortugueseIndicators = new List<string>(),
+            MinimumIndicatorMatches = 3
+        };
+
+        var detector = BuildLanguageDetector(options);
+
+        Assert.False(detector.IsPortuguese("experiência"));
+    }
+
+    [Fact]
+    public void IsPortuguese_UsesMinimumOneWhenNonPositive()
+    {
+        var options = new LanguageDetectionOptions
+        {
+            PortugueseIndicators = new List<string> { "empresa" },
+            MinimumIndicatorMatches = 0
+        };
+
+        var detector = BuildLanguageDetector(options);
+
+        Assert.True(detector.IsPortuguese("empresa"));
+    }
+
+    private static LanguageDetector BuildLanguageDetector(LanguageDetectionOptions options)
+    {
+        return new LanguageDetector(Options.Create(options));
+    }
+
+    private static LanguageDetectionOptions CreateDefaultOptions()
+    {
+        return new LanguageDetectionOptions
         {
             PortugueseIndicators = new List<string>
             {
@@ -43,7 +76,5 @@ public class LanguageDetectorTests
             },
             MinimumIndicatorMatches = 3
         };
-
-        return new LanguageDetector(Options.Create(options));
     }
 }

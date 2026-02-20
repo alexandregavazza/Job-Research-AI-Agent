@@ -55,4 +55,37 @@ public class JobFitScorerTests
         await Assert.ThrowsAsync<Exception>(() =>
             scorer.ScoreAsync("resume", "title", "description"));
     }
+
+    [Fact]
+    public async Task ScoreAsync_PassesExpectedPlaceholders()
+    {
+        Dictionary<string, string>? captured = null;
+
+        var chat = new Mock<IChatCompletionClient>();
+        chat.Setup(c => c.CompleteAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<ChatCompletionOptions>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync("{\"score\":85,\"reason\":\"Strong match\"}");
+
+        var promptService = new Mock<IPromptService>();
+        promptService.Setup(p => p.LoadSystemPrompt("JobFitScorer"))
+            .Returns("system");
+        promptService.Setup(p => p.LoadUserPrompt("JobFitScorer", It.IsAny<Dictionary<string, string>>()))
+            .Callback<string, Dictionary<string, string>>((_, placeholders) =>
+            {
+                captured = placeholders;
+            })
+            .Returns("user");
+
+        var scorer = new JobFitScorer(chat.Object, promptService.Object);
+
+        await scorer.ScoreAsync("resume", "title", "description");
+
+        Assert.NotNull(captured);
+        Assert.Equal("resume", captured!["RESUME"]);
+        Assert.Equal("title", captured["JOB_TITLE"]);
+        Assert.Equal("description", captured["JOB_DESCRIPTION"]);
+    }
 }
