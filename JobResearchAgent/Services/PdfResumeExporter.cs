@@ -33,6 +33,7 @@ public class PdfResumeExporter
         var isPortuguese = LanguageDetector.IsPortuguese(job.Description ?? resume.ProfessionalSummary ?? "");
         var earlyCareerLabel = EarlyCareerTextSelector.SelectLabel(_config, isPortuguese);
         var earlyCareerDescription = EarlyCareerTextSelector.SelectDescription(_config, isPortuguese);
+        var phone = ResolvePhoneByLocation(job);
         var todayFolder = Path.Combine(_basePath, DateTime.UtcNow.ToString("yyyy-MM-dd"));
         Directory.CreateDirectory(todayFolder);
 
@@ -55,7 +56,7 @@ public class PdfResumeExporter
 
                     header.Item().Text(text =>
                     {
-                        text.Span(_config["Candidate:Phone"] ?? "Phone Not Configured");
+                        text.Span(phone);
                     });
 
                     header.Item().Text(text =>
@@ -123,5 +124,34 @@ public class PdfResumeExporter
         .GeneratePdf(filePath);
 
         return filePath;
+    }
+
+    private string ResolvePhoneByLocation(JobPosting job)
+    {
+        var location = job.Location?.ToLowerInvariant() ?? "";
+
+        if (location.Contains("brazil") ||
+            location.Contains("são paulo") ||
+            location.Contains("belo horizonte") ||
+            location.Contains("rio de janeiro") ||
+            location.Contains("brasília") ||
+            location.Contains("brasil"))
+            return _config["Candidate:PhoneBR"]
+                ?? _config["Candidate:Phone"]
+                ?? "Phone Not Configured";
+
+        if (location.Contains("canada"))
+            return _config["Candidate:PhoneCA"]
+                ?? _config["Candidate:Phone"]
+                ?? "Phone Not Configured";
+
+        if (location.Contains("united states") ||
+            location.Contains("usa") ||
+            location.Contains("us"))
+            return _config["Candidate:PhoneUS"]
+                ?? _config["Candidate:Phone"]
+                ?? "Phone Not Configured";
+
+        return _config["Candidate:Phone"] ?? "Phone Not Configured";
     }
 }
